@@ -108,6 +108,7 @@
     const db = firebase.database();
     let uid = "", kelasAktif = "", saveTimeout;
     const JUMLAH_SOAL = 50;
+    let siswaKeys = []; // Array untuk menyimpan urutan kunci siswa
 
     firebase.auth().onAuthStateChanged((user) => {
         if (user) {
@@ -153,10 +154,12 @@
             const tbody = document.getElementById('tabel-input-jawaban');
             tbody.innerHTML = "";
             let no = 1;
+            siswaKeys = []; // Reset array
 
             snap.forEach((child) => {
                 const s = child.val();
                 const keySiswa = child.key;
+                siswaKeys.push(keySiswa); // Tambahkan ke array urutan
                 const jwbArr = (s.jawaban || "").split("");
 
                 let gridSiswa = `<div class="grid-jawaban">`;
@@ -204,7 +207,7 @@
     function handleKeyDown(event, el, tipe, keySiswa, index) {
         const key = event.key;
 
-        if (key === 'ArrowRight' || key === 'ArrowDown') {
+        if (key === 'ArrowRight') {
             event.preventDefault();
             if (index < JUMLAH_SOAL) {
                 const nextId = tipe === 'master' ? `m_${index + 1}` : `s_${keySiswa}_${index + 1}`;
@@ -214,12 +217,58 @@
             return;
         }
 
-        if (key === 'ArrowLeft' || key === 'ArrowUp') {
+        if (key === 'ArrowLeft') {
             event.preventDefault();
             if (index > 1) {
                 const prevId = tipe === 'master' ? `m_${index - 1}` : `s_${keySiswa}_${index - 1}`;
                 const prevEl = document.getElementById(prevId);
                 if (prevEl) prevEl.focus();
+            }
+            return;
+        }
+
+        if (key === 'ArrowDown') {
+            event.preventDefault();
+            if (tipe === 'master') {
+                // Dari master ke siswa pertama di kolom yang sama
+                if (siswaKeys.length > 0) {
+                    const firstSiswaKey = siswaKeys[0];
+                    const siswaId = `s_${firstSiswaKey}_${index}`;
+                    const siswaEl = document.getElementById(siswaId);
+                    if (siswaEl) siswaEl.focus();
+                }
+            } else {
+                // Dari siswa ke siswa berikutnya di kolom yang sama
+                const currentIndex = siswaKeys.indexOf(keySiswa);
+                if (currentIndex < siswaKeys.length - 1) {
+                    const nextSiswaKey = siswaKeys[currentIndex + 1];
+                    const nextId = `s_${nextSiswaKey}_${index}`;
+                    const nextEl = document.getElementById(nextId);
+                    if (nextEl) nextEl.focus();
+                }
+            }
+            return;
+        }
+
+        if (key === 'ArrowUp') {
+            event.preventDefault();
+            if (tipe === 'master') {
+                // Sudah di atas, tidak ada yang di atas master
+                return;
+            } else {
+                // Dari siswa ke siswa sebelumnya, atau ke master jika di siswa pertama
+                const currentIndex = siswaKeys.indexOf(keySiswa);
+                if (currentIndex > 0) {
+                    const prevSiswaKey = siswaKeys[currentIndex - 1];
+                    const prevId = `s_${prevSiswaKey}_${index}`;
+                    const prevEl = document.getElementById(prevId);
+                    if (prevEl) prevEl.focus();
+                } else {
+                    // Ke master row
+                    const masterId = `m_${index}`;
+                    const masterEl = document.getElementById(masterId);
+                    if (masterEl) masterEl.focus();
+                }
             }
             return;
         }

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - PenaAnalisis</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --sidebar-bg: #2c3e50;
+            --sidebar-hover: #34495e;
+            --sidebar-active: #2980b9;
+            --sidebar-text: #ecf0f1;
+            --accent-green: #27ae60;
+            --accent-red: #c0392b;
+            --main-bg: #eaeff2;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; background: var(--main-bg); }
+
+        /* --- SIDEBAR STYLE --- */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+
+        .sidebar-header {
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo-circle {
+            width: 90px; height: 90px;
+            background: white;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            cursor: pointer;
+            border: 3px solid rgba(255,255,255,0.2);
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .logo-circle:hover {
+            transform: scale(1.05);
+            border-color: var(--sidebar-active);
+        }
+
+        .logo-circle img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        .logo-circle::after {
+            content: "GANTI";
+            position: absolute;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            font-size: 9px;
+            width: 100%;
+            padding: 2px 0;
+            opacity: 0;
+            transition: 0.3s;
+        }
+        .logo-circle:hover::after { opacity: 1; }
+
+        #sidebar-tp-display {
+            font-size: 12px;
+            color: var(--accent-green);
+            font-weight: bold;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 12px;
+            border-radius: 12px;
+            display: inline-block;
+            border: 1px solid rgba(39, 174, 96, 0.3);
+        }
+
+        .sidebar-header h2 { font-size: 14px; letter-spacing: 1px; line-height: 1.4; text-transform: uppercase; }
+
+        /* --- NAV MENU DENGAN GULIR (SCROLL) MENARIK --- */
+        .nav-menu { 
+            flex-grow: 1; 
+            margin-top: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            overflow-y: auto; /* Aktifkan Scroll */
+            scrollbar-width: thin;
+            scrollbar-color: var(--sidebar-active) transparent;
+        }
+
+        /* Styling Scrollbar untuk Chrome/Safari */
+        .nav-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+        .nav-menu::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .nav-menu::-webkit-scrollbar-thumb {
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        .nav-menu:hover::-webkit-scrollbar-thumb {
+            background-color: var(--sidebar-active);
+        }
+
+        .nav-item {
+            padding: 15px 25px;
+            cursor: pointer;
+            display: block;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 13px;
+            transition: all 0.3s ease; /* Transisi lebih smooth */
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+        }
+
+        /* Efek Gulir Horisontal Saat Hover agar lebih hidup */
+        .nav-item:hover { 
+            background: var(--sidebar-hover); 
+            padding-left: 35px; /* Bergulir ke kanan sedikit */
+            color: white;
+        }
+
+        .nav-item.active { 
+            background: var(--sidebar-active); 
+            border-left: 5px solid white; 
+            padding-left: 35px;
+        }
+
+        .nav-item.highlight { background: var(--accent-green); font-weight: bold; }
+        .nav-item.highlight:hover { background: #219150; }
+        
+        .logout-item {
+            background: var(--accent-red);
+            font-weight: bold;
+            margin-top: auto;
+            border-bottom: none;
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+        }
+        .logout-item:hover { background: #a93226; padding-left: 25px; /* Logout tidak perlu geser terlalu jauh */}
+
+        /* --- MODAL & MAIN CONTENT --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .logout-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .logout-card h3 { color: var(--sidebar-bg); margin-bottom: 10px; font-size: 20px; }
+        .logout-card p { color: #636e72; margin-bottom: 25px; font-size: 14px; }
+
+        .modal-btns { display: flex; gap: 10px; justify-content: center; }
+
+        .btn-modal {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .btn-cancel { background: #dfe6e9; color: #2d3436; }
+        .btn-confirm-logout { background: var(--accent-red); color: white; }
+        .btn-confirm-logout:hover { background: #a93226; transform: translateY(-2px); }
+
+        .main-content {
+            flex-grow: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #content-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        #logo-input { display: none; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; }
+            .nav-menu { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="logoutModal" class="modal-overlay">
+        <div class="logout-card animate__animated animate__zoomIn">
+            <div style="font-size: 50px; margin-bottom: 15px;">👋</div>
+            <h3>Konfirmasi Keluar</h3>
+            <p>Apakah Anda yakin ingin mengakhiri sesi ini dan keluar dari aplikasi?</p>
+            <div class="modal-btns">
+                <button class="btn-modal btn-cancel" onclick="closeLogoutModal()">Batal</button>
+                <button class="btn-modal btn-confirm-logout" onclick="executeLogout()">Ya, Keluar</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="logo-input" accept="image/*">
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-circle" onclick="document.getElementById('logo-input').click()">
+                <img id="display-logo" src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Logo_Ikhlas_Beramal_Kemenag.png" alt="Logo">
+            </div>
+
+            <div id="sidebar-tp-display">TP: Memuat...</div>
+
+            <h2>Pusat Data<br>PenaAnalisis</h2>
+        </div>
+        
+        <div class="nav-menu">
+            <div class="nav-item active" onclick="loadPage('Identitas Penilaian.html', this)">1. Profil Guru & Sekolah</div>
+            <div class="nav-item" onclick="loadPage('peserta-didik.html', this)">2. Profil Peserta Didik</div>
+            <div class="nav-item" onclick="loadPage('input-jawaban.html', this)">3. Input Jawaban Siswa</div>
+            <div class="nav-item" onclick="loadPage('konversi.html', this)">4. Konversi Nilai</div>
+            <div class="nav-item" onclick="loadPage('analisis.html', this)">5. Analisis Butir Soal</div>
+            <div class="nav-item" onclick="loadPage('hasil.html', this)">6. Hasil Analisis Akhir</div>
+            <div class="nav-item highlight" onclick="loadPage('cetak.html', this)">7. Cetak Laporan</div>
+            
+            <div class="nav-item logout-item" onclick="handleLogout()">🚪 KELUAR APLIKASI</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <iframe src="Identitas Penilaian.html" id="content-frame"></iframe>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBq93zwNxWHkBs21i-58v0EhpztkaU3_W4",
+            authDomain: "analisis-app-d8d93.firebaseapp.com",
+            databaseURL: "https://analisis-app-d8d93-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "analisis-app-d8d93",
+            storageBucket: "analisis-app-d8d93.firebasestorage.app",
+            messagingSenderId: "1088329722308",
+            appId: "1:1088329722308:web:70c80e5b59fc210bff1c91"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                db.ref('users_data/' + user.uid + '/settings/logo_url').on('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        document.getElementById('display-logo').src = snapshot.val();
+                    }
+                });
+
+                db.ref('users_data/' + user.uid + '/pengaturan/tp_aktif').on('value', (snapshot) => {
+                    const tpDisplay = document.getElementById('sidebar-tp-display');
+                    if (snapshot.exists() && snapshot.val() !== "") {
+                        tpDisplay.innerText = "TP: " + snapshot.val();
+                    } else {
+                        tpDisplay.innerText = "TP: Belum Diatur";
+                    }
+                });
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        function handleLogout() {
+            Swal.fire({
+                title: 'Konfirmasi Keluar',
+                text: "Apakah Anda yakin ingin mengakhiri sesi ini?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#c0392b',
+                cancelButtonColor: '#2c3e50',
+                confirmButtonText: 'Ya, Keluar!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    executeLogout();
+                }
+            });
+        }
+
+        async function executeLogout() {
+            try {
+                Swal.fire({
+                    title: 'Sedang Keluar...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                await auth.signOut();
+                window.location.href = "index.html";
+            } catch (error) {
+                Swal.fire('Gagal!', 'Terjadi kesalahan: ' + error.message, 'error');
+            }
+        }
+
+        document.getElementById('logo-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const base64String = event.target.result;
+                const user = auth.currentUser;
+                if (user) {
+                    db.ref('users_data/' + user.uid + '/settings/logo_url').set(base64String)
+                    .then(() => {
+                        Swal.fire('Berhasil!', 'Logo berhasil diperbarui.', 'success');
+                    })
+                    .catch((err) => {
+                        Swal.fire('Gagal!', 'Gagal menyimpan: ' + err.message, 'error');
+                    });
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function loadPage(pageUrl, element) {
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById('content-frame').src = pageUrl;
+        }
+    </script>
+</body>
+</html>

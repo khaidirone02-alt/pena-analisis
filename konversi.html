@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4. Konversi Nilai - Terintegrasi</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+    <style>
+        :root {
+            --primary-blue: #3498db;
+            --bg-light: #f4f7f6;
+            --border-color: #ddd;
+            --text-dark: #2c3e50;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #fff; 
+            margin: 0; 
+            padding: 20px; 
+            color: var(--text-dark);
+        }
+
+        h2 { 
+            font-size: 18px; 
+            border-bottom: 2px solid #eee; 
+            padding-bottom: 10px; 
+            margin-bottom: 30px; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-konversi {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 25px;
+            max-width: 450px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .form-group { margin-bottom: 20px; }
+        
+        label { 
+            display: block; 
+            font-size: 12px; 
+            font-weight: bold; 
+            color: #555; 
+            margin-bottom: 8px; 
+            text-transform: uppercase;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: #fafafa;
+            font-size: 15px;
+            color: #333;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary-blue);
+            outline: none;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        input:read-only {
+            background-color: #f1f3f5;
+            color: #777;
+            cursor: not-allowed;
+            border-style: dashed;
+        }
+
+        .info-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff9db;
+            border-left: 4px solid #fcc419;
+            border-radius: 4px;
+        }
+
+        .info-text {
+            font-size: 11.5px;
+            color: #666;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .status-sync {
+            font-size: 11px;
+            color: #27ae60;
+            margin-top: 5px;
+            display: block;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>4. KONVERSI NILAI</h2>
+
+    <div class="card-konversi">
+        <div class="form-group">
+            <label>Nilai Terendah (KKM)</label>
+            <input type="number" id="konv_kkm" readonly placeholder="Memuat...">
+            <span class="status-sync">✓ Sinkron dengan Profil Guru</span>
+        </div>
+
+        <div class="form-group">
+            <label>Nilai Tertinggi (Skala 100)</label>
+            <input type="number" id="konv_max" value="100" oninput="saveNilaiTertinggi()">
+        </div>
+
+        <div class="form-group">
+            <label>Skor Maksimal Soal</label>
+            <input type="number" id="konv_skor_max" readonly placeholder="0">
+            <span class="status-sync">✓ Sinkron dengan Karakter Kunci</span>
+        </div>
+
+        <div class="info-box">
+            <p class="info-text">
+                <b>Catatan Sistem:</b><br>
+                • <b>KKM</b> otomatis sinkron dengan <i>Identitas Penilaian.html</i>.<br>
+                • <b>Skor Maks</b> dihitung berdasarkan jumlah karakter huruf (isian) di <i>input-jawaban.html</i>, mengabaikan kotak kosong.<br>
+                • Data disimpan secara otomatis ke sistem analisis.
+            </p>
+        </div>
+    </div>
+
+<script>
+    // --- KONFIGURASI FIREBASE ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBq93zwNxWHkBs21i-58v0EhpztkaU3_W4",
+        authDomain: "analisis-app-d8d93.firebaseapp.com",
+        databaseURL: "https://analisis-app-d8d93-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "analisis-app-d8d93",
+        storageBucket: "analisis-app-d8d93.firebasestorage.app",
+        messagingSenderId: "1088329722308",
+        appId: "1:1088329722308:web:70c80e5b59fc210bff1c91"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let uid = "";
+    let saveTimeout;
+
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            uid = user.uid;
+            startRealtimeSync();
+        }
+    });
+
+    function startRealtimeSync() {
+        // 1. Ambil KKM
+        db.ref(`users_data/${uid}/profil_sekolah/kkm`).on('value', (snap) => {
+            document.getElementById('konv_kkm').value = snap.val() || 75;
+        });
+
+        // 2. HITUNG SKOR MAKS BERDASARKAN ISIAN (BUKAN KOTAK)
+        db.ref(`users_data/${uid}/kunci_jawaban`).on('value', (snap) => {
+            const kunciStr = snap.val() || "";
+            
+            // Regex ini menghapus semua karakter "-" (strip) 
+            // sehingga yang tersisa hanya huruf isian kunci (A, B, C, dll)
+            const hanyaIsian = kunciStr.replace(/-/g, "");
+            const jmlSoalIsi = hanyaIsian.length;
+            
+            document.getElementById('konv_skor_max').value = jmlSoalIsi;
+            
+            // Update ke database agar sinkron ke modul analisis & hasil
+            db.ref(`users_data/${uid}/konversi_pengaturan/skor_maks_soal`).set(jmlSoalIsi);
+        });
+
+        // 3. Ambil Nilai Tertinggi
+        db.ref(`users_data/${uid}/konversi_pengaturan/nilai_tertinggi`).once('value', (snap) => {
+            if(snap.exists()) {
+                document.getElementById('konv_max').value = snap.val();
+            } else {
+                document.getElementById('konv_max').value = 100;
+                saveNilaiTertinggi();
+            }
+        });
+    }
+
+    function saveNilaiTertinggi() {
+        const valMax = document.getElementById('konv_max').value;
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            db.ref(`users_data/${uid}/konversi_pengaturan`).update({
+                nilai_tertinggi: parseInt(valMax) || 100
+            });
+        }, 1000);
+    }
+</script>
+</body>
+</html>

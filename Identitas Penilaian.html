@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identitas Penilaian - Sistem Analisis ASAT</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
+    <!-- Tambahan: SweetAlert2 untuk Notifikasi Menarik -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary-blue: #3498db;
+            --danger: #e74c3c;
+            --success: #27ae60;
+            --gray-light: #f8f9fa;
+            --border-color: #ddd;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background-color: #eaeff2; margin: 0; padding: 20px; }
+        
+        .container { 
+            max-width: 1100px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 25px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+        }
+
+        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-group { display: flex; gap: 10px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; transition: 0.3s; }
+        .btn-edit { background: var(--danger); color: white; }
+        .btn-save { background: var(--success); color: white; }
+        .btn-logout { background: #34495e; color: white; }
+
+        .alert-warning { 
+            background: #fff3cd; 
+            color: #856404; 
+            padding: 12px; 
+            border-radius: 4px; 
+            font-size: 11px; 
+            margin-bottom: 25px; 
+            border-left: 5px solid #ffeeba; 
+        }
+
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .section-header { 
+            color: var(--primary-blue); 
+            font-size: 14px; 
+            font-weight: bold; 
+            margin-bottom: 20px; 
+            border-bottom: 2px solid var(--gray-light);
+            padding-bottom: 8px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 11px; font-weight: 700; color: #555; margin-bottom: 6px; text-transform: uppercase; }
+        
+        /* Tooltip/Info Tag Style */
+        .info-tag {
+            display: inline-block;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            font-size: 10px;
+            text-align: center;
+            line-height: 14px;
+            margin-left: 5px;
+            cursor: help;
+            position: relative;
+        }
+        .info-tag:hover::after {
+            content: "Daftar pilihan kelas akan diperbarui di sini setelah Anda menambah baris kelas di bawah dan mengklik tombol 'Simpan & Kunci Data'";
+            position: absolute;
+            left: 20px;
+            top: 0;
+            background: #2c3e50;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            width: 200px;
+            font-size: 10px;
+            font-weight: normal;
+            text-transform: none;
+            z-index: 10;
+            line-height: 1.4;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input, select { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 4px; 
+            font-size: 13px; 
+            background: #fff;
+        }
+        input:disabled, select:disabled { background-color: #f1f3f5; color: #666; cursor: not-allowed; }
+
+        .kelas-list { border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; background: #fafafa; max-height: 250px; overflow-y: auto; }
+        .kelas-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+        .kelas-row input { flex: 1; padding: 5px 8px; }
+        .btn-small { padding: 5px 10px; font-size: 10px; color: white; border-radius: 3px; border: none; cursor: pointer; }
+        .btn-del { background: var(--danger); }
+        .btn-add { background: var(--success); width: 100%; margin-top: 10px; padding: 8px; }
+        
+        #penilaian_kelas_aktif { border: 2px solid var(--primary-blue); font-weight: bold; color: var(--primary-blue); }
+        #penilaian_tp { background: #fffde7; border: 1px solid #fbc02d; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-flex">
+        <h2 style="font-size: 18px; color: #2c3e50;">1. IDENTITAS PENILAIAN</h2>
+        <div class="btn-group">
+            <button id="master-edit-btn" class="btn btn-edit" onclick="toggleMasterEdit()">Buka Menu Edit</button>
+            <button class="btn btn-logout" onclick="handleLogout()">Logout</button>
+        </div>
+    </div>
+
+    <div id="status-alert" class="alert-warning">
+        ⚠️ <b>Perhatian:</b> Menu input dikunci. Klik tombol "Buka Menu Edit" untuk melakukan perubahan data profil.
+    </div>
+
+    <div class="main-grid">
+        <div class="column">
+            <div class="section-header">Profil Guru & Penilaian</div>
+            
+            <div class="form-group">
+                <label>Tahun Pelajaran (Kunci Data)</label>
+                <input type="text" id="penilaian_tp" class="lockable" disabled placeholder="Contoh: 2025/2026" onblur="handleTPChange()">
+            </div>
+
+            <div class="form-group">
+                <label>Nama Guru</label>
+                <input type="text" id="guru_nama" class="lockable" disabled placeholder="Contoh: Nama Guru, S.Pd.">
+            </div>
+            
+            <div class="form-group">
+                <label>PegID / NIP</label>
+                <input type="text" id="guru_pegid" class="lockable" disabled>
+            </div>
+            
+            <div class="form-group">
+                <label>Mata Pelajaran</label>
+                <input type="text" id="guru_mapel" class="lockable" disabled>
+            </div>
+            
+            <div class="form-group">
+                <label>KKM</label>
+                <input type="number" id="penilaian_kkm" class="lockable" disabled>
+            </div>
+
+            <div class="form-group">
+                <label style="color: var(--primary-blue);">
+                    Kelas Aktif (Tersaring per TP)
+                    <span class="info-tag">?</span>
+                </label>
+                <select id="penilaian_kelas_aktif" class="lockable" disabled>
+                    <option value="">Pilih Kelas...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Kelola Daftar Kelas (Tahun Pelajaran Ini):</label>
+                <div id="wrapper-kelas" class="kelas-list"></div>
+                <button id="add-kelas-row" class="btn btn-add" style="display:none;" onclick="renderKelasRow('')">Tambah Baris Kelas (+)</button>
+            </div>
+        </div>
+
+        <div class="column">
+            <div class="section-header">Profil Sekolah & Waktu</div>
+            
+            <div class="form-group">
+                <label>Nama Sekolah</label>
+                <input type="text" id="sch_nama" class="lockable" disabled>
+            </div>
+            
+            <div class="form-group">
+                <label>Nama Kabupaten/Kota</label>
+                <input type="text" id="sch_kab" class="lockable" disabled>
+            </div>
+            
+            <div class="form-group">
+                <label>Provinsi</label>
+                <input type="text" id="sch_prov" class="lockable" disabled>
+            </div>
+            
+            <div class="form-group">
+                <label>Nama Kepala Sekolah</label>
+                <input type="text" id="sch_kasek" class="lockable" disabled>
+            </div>
+            
+            <div class="form-group">
+                <label>NIP Kepala Sekolah</label>
+                <input type="text" id="sch_nip" class="lockable" disabled>
+            </div>
+
+            <div class="form-group">
+                <label>Semester</label>
+                <select id="penilaian_semester" class="lockable" disabled>
+                    <option value="Ganjil">Ganjil</option>
+                    <option value="Genap">Genap</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBq93zwNxWHkBs21i-58v0EhpztkaU3_W4",
+        authDomain: "analisis-app-d8d93.firebaseapp.com",
+        databaseURL: "https://analisis-app-d8d93-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "analisis-app-d8d93",
+        storageBucket: "analisis-app-d8d93.firebasestorage.app",
+        messagingSenderId: "1088329722308",
+        appId: "1:1088329722308:web:70c80e5b59fc210bff1c91"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let uid = "";
+    let isEditing = false;
+
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            uid = user.uid;
+            loadSession();
+            fetchDataSekolahUmum();
+        } else {
+            window.location.href = "login.html";
+        }
+    });
+
+    function loadSession() {
+        db.ref(`users_data/${uid}/pengaturan/tp_aktif`).once('value', (snap) => {
+            const tp = snap.val() || "";
+            document.getElementById('penilaian_tp').value = tp;
+            if(tp) loadDataByTP(tp);
+        });
+    }
+
+    function fetchDataSekolahUmum() {
+        db.ref(`users_data/${uid}/profil_sekolah_umum`).on('value', (snap) => {
+            const val = snap.val() || {};
+            document.getElementById('sch_nama').value = val.sekolah || "";
+            document.getElementById('sch_kab').value = val.kabupaten || "";
+            document.getElementById('sch_prov').value = val.provinsi || "";
+            document.getElementById('sch_kasek').value = val.kepala || "";
+            document.getElementById('sch_nip').value = val.nip_kepala || "";
+        });
+    }
+
+    function loadDataByTP(tp) {
+        const tpPath = tp.replace(/\//g, '_');
+        db.ref(`users_data/${uid}/tahun_pelajaran/${tpPath}/identitas`).on('value', (snap) => {
+            const val = snap.val() || {};
+            document.getElementById('guru_nama').value = val.nama_guru || "";
+            document.getElementById('guru_pegid').value = val.pegid || "";
+            document.getElementById('guru_mapel').value = val.mapel || "";
+            document.getElementById('penilaian_kkm').value = val.kkm || "70";
+            document.getElementById('penilaian_semester').value = val.semester || "Ganjil";
+
+            const wrapper = document.getElementById('wrapper-kelas');
+            const selectAktif = document.getElementById('penilaian_kelas_aktif');
+            wrapper.innerHTML = "";
+            selectAktif.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+
+            if (val.list_kelas) {
+                val.list_kelas.forEach(item => {
+                    renderKelasRow(item);
+                    let opt = document.createElement('option');
+                    opt.value = item; opt.text = "Kelas " + item;
+                    selectAktif.appendChild(opt);
+                });
+            }
+            
+            db.ref(`users_data/${uid}/tahun_pelajaran/${tpPath}/kelas_aktif`).once('value', (s) => {
+                if(s.exists()) selectAktif.value = s.val();
+            });
+        });
+    }
+
+    function handleTPChange() {
+        const tp = document.getElementById('penilaian_tp').value.trim();
+        if(tp) loadDataByTP(tp);
+    }
+
+    function renderKelasRow(value) {
+        const wrapper = document.getElementById('wrapper-kelas');
+        const div = document.createElement('div');
+        div.className = "kelas-row";
+        div.innerHTML = `
+            <input type="text" class="kelas-val" value="${value}" ${isEditing ? '' : 'disabled'} placeholder="Nama Kelas">
+            <button class="btn-small btn-del" onclick="this.parentElement.remove()" ${isEditing ? '' : 'disabled'}>Hapus</button>
+        `;
+        wrapper.appendChild(div);
+    }
+
+    function toggleMasterEdit() {
+        isEditing = !isEditing;
+        const btn = document.getElementById('master-edit-btn');
+        const alertBox = document.getElementById('status-alert');
+        const inputs = document.querySelectorAll('.lockable');
+        const addBtn = document.getElementById('add-kelas-row');
+
+        if (isEditing) {
+            btn.innerText = "Simpan & Kunci Data";
+            btn.classList.replace('btn-edit', 'btn-save');
+            alertBox.innerHTML = "🔓 <b>Mode Edit Aktif:</b> Perubahan akan disimpan ke Tahun Pelajaran yang dipilih.";
+            alertBox.style.background = "#d4edda"; alertBox.style.color = "#155724";
+            inputs.forEach(i => i.disabled = false);
+            addBtn.style.display = "block";
+            document.querySelectorAll('.kelas-val, .btn-del').forEach(el => el.disabled = false);
+        } else {
+            saveToFirebase();
+            btn.innerText = "Buka Menu Edit";
+            btn.classList.replace('btn-save', 'btn-edit');
+            alertBox.innerHTML = "⚠️ <b>Perhatian:</b> Menu input dikunci.";
+            alertBox.style.background = "#fff3cd"; alertBox.style.color = "#856404";
+            inputs.forEach(i => i.disabled = true);
+            addBtn.style.display = "none";
+            document.querySelectorAll('.kelas-val, .btn-del').forEach(el => el.disabled = true);
+        }
+    }
+
+    function saveToFirebase() {
+        const tp = document.getElementById('penilaian_tp').value.trim();
+        if(!tp) { alert("TP wajib diisi!"); return; }
+        const tpPath = tp.replace(/\//g, '_');
+
+        const kelasNodes = document.querySelectorAll('.kelas-val');
+        let arrayKelas = [];
+        kelasNodes.forEach(node => { if(node.value.trim() !== "") arrayKelas.push(node.value.trim().toUpperCase()); });
+
+        const kelasAktif = document.getElementById('penilaian_kelas_aktif').value;
+
+        db.ref(`users_data/${uid}/profil_sekolah_umum`).update({
+            sekolah: document.getElementById('sch_nama').value,
+            kabupaten: document.getElementById('sch_kab').value,
+            provinsi: document.getElementById('sch_prov').value,
+            kepala: document.getElementById('sch_kasek').value,
+            nip_kepala: document.getElementById('sch_nip').value
+        });
+
+        db.ref(`users_data/${uid}/tahun_pelajaran/${tpPath}/identitas`).update({
+            nama_guru: document.getElementById('guru_nama').value,
+            pegid: document.getElementById('guru_pegid').value,
+            mapel: document.getElementById('guru_mapel').value,
+            kkm: document.getElementById('penilaian_kkm').value,
+            semester: document.getElementById('penilaian_semester').value,
+            list_kelas: arrayKelas
+        });
+
+        db.ref(`users_data/${uid}/pengaturan`).update({
+            tp_aktif: tp,
+            tp_path: tpPath,
+            kelas_aktif: kelasAktif
+        });
+        db.ref(`users_data/${uid}/tahun_pelajaran/${tpPath}/kelas_aktif`).set(kelasAktif);
+
+        Swal.fire({
+            title: 'Tersimpan!',
+            text: 'Data berhasil diperbarui.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+
+    function handleLogout() {
+        Swal.fire({
+            title: 'Konfirmasi Keluar',
+            text: "Apakah Anda yakin ingin mengakhiri sesi ini?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#34495e',
+            cancelButtonColor: '#e74c3c',
+            confirmButtonText: 'Ya, Logout!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Berhasil!',
+                    text: 'Sedang mengalihkan...',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                
+                setTimeout(() => {
+                    firebase.auth().signOut().then(() => { 
+                        window.location.href = "login.html"; 
+                    });
+                }, 1500);
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

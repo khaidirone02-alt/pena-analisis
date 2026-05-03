@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3498db">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="logo.svg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Login - PenaAnalisis</title>
+    
+    <!-- Firebase SDK Compat -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+    <style>
+        :root { 
+            --primary: #2c3e50; 
+            --secondary: #3498db; 
+            --accent: #27ae60; 
+            --bg: #eaeff2; 
+            --white: #ffffff;
+            --gradient-text: linear-gradient(45deg, #3498db, #2ecc71);
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background: var(--primary); margin: 0; overflow: hidden; }
+        
+        #splash-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+            transition: opacity 0.8s ease-out;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .splash-logo {
+            width: 40vw;
+            max-width: 250px;
+            min-width: 150px;
+            height: auto;
+            margin-bottom: 25px;
+            animation: pulse 2s infinite;
+        }
+
+        .brand-name {
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -1px;
+            background: var(--gradient-text);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .quote-text {
+            font-style: italic;
+            font-size: 16px;
+            color: #bdc3c7;
+            text-align: center;
+            max-width: 80%;
+            margin-top: 20px;
+            min-height: 40px;
+        }
+
+        #toast-container {
+            position: fixed;
+            top: 20px; right: 20px;
+            z-index: 10001;
+        }
+        .toast {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 5px solid var(--secondary);
+            animation: slideInRight 0.5s ease;
+        }
+        .toast.success { border-left-color: var(--accent); }
+        .toast.error { border-left-color: #e74c3c; }
+
+        #auth-container { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%); 
+        }
+
+        .auth-card { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 16px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
+            width: 90%; 
+            max-width: 400px; 
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 5px;
+            background: var(--secondary);
+        }
+
+        .auth-card h2 { color: var(--primary); margin-bottom: 5px; font-size: 24px; }
+        .auth-card p { color: #7f8c8d; font-size: 13px; margin-bottom: 25px; }
+
+        .auth-card input { 
+            width: 100%; padding: 14px; margin: 8px 0; 
+            border: 1px solid #dfe6e9; border-radius: 8px; 
+            box-sizing: border-box; background: #f9f9f9;
+            transition: 0.3s;
+        }
+        .auth-card input:focus { border-color: var(--secondary); outline: none; background: white; }
+        
+        .password-container { position: relative; width: 100%; }
+        .toggle-password {
+            position: absolute; right: 15px; top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer; color: #b2bec3; font-size: 18px;
+        }
+        
+        .auth-btn { 
+            width: 100%; padding: 14px; 
+            background: var(--secondary); color: white; 
+            border: none; border-radius: 8px; 
+            cursor: pointer; font-weight: bold; font-size: 16px;
+            margin-top: 15px; transition: 0.3s;
+        }
+        .auth-btn:hover { background: #2980b9; transform: translateY(-2px); }
+
+        .switch-auth { margin-top: 20px; font-size: 14px; color: #636e72; }
+        .switch-auth b { color: var(--secondary); cursor: pointer; }
+        
+        .forgot-link { 
+            font-size: 12px; color: var(--secondary); 
+            display: block; margin-top: 10px; cursor: pointer; 
+            text-align: right; text-decoration: none;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<div id="splash-screen">
+    <img src="logo.svg" class="splash-logo" alt="Logo">
+    <h1 class="brand-name animate__animated animate__fadeInDown">PenaAnalisis</h1>
+    <div id="quote" class="quote-text animate__animated animate__fadeInUp"></div>
+    <div style="margin-top: 30px;" class="animate__animated animate__fadeIn">
+        <small>Mohon Tunggu...</small>
+    </div>
+</div>
+
+<div id="auth-container">
+    <div class="auth-card animate__animated animate__zoomIn">
+        <h2>PenaAnalisis</h2>
+        <p id="auth-subtitle">Silakan masuk ke akun Anda</p>
+        
+        <input type="text" id="auth-displayname" placeholder="Nama Lengkap Guru" style="display: none;">
+        <input type="email" id="auth-email" placeholder="Alamat Email">
+        
+        <div class="password-container">
+            <input type="password" id="auth-password" placeholder="Password">
+            <span class="toggle-password" onclick="togglePasswordVisibility()">🙈</span>
+        </div>
+        
+        <span class="forgot-link" id="forgot-btn" onclick="forgotPassword()">Lupa Password?</span>
+        <button class="auth-btn" id="main-auth-btn" onclick="handleAuth()">Masuk Sekarang</button>
+        
+        <p class="switch-auth" id="toggle-text">
+            Belum memiliki akun? <b onclick="toggleAuthMode()">Daftar Disini</b>
+        </p>
+    </div>
+</div>
+
+<script>
+    // Konfigurasi Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBq93zwNxWHkBs21i-58v0EhpztkaU3_W4",
+        authDomain: "analisis-app-d8d93.firebaseapp.com",
+        projectId: "analisis-app-d8d93",
+        databaseURL: "https://analisis-app-d8d93-default-rtdb.asia-southeast1.firebasedatabase.app/",
+        storageBucket: "analisis-app-d8d93.firebasestorage.app",
+        messagingSenderId: "1088329722308",
+        appId: "1:1088329722308:web:70c80e5b59fc210bff1c91"
+    };
+    
+    // Inisialisasi Firebase Compat
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const quotes = [
+        "\"Pendidikan adalah senjata paling mematikan di dunia.\"",
+        "\"Guru yang baik itu ibarat lilin, menerangi jalan orang lain.\"",
+        "\"Masa depan bangsa ada di tangan para pendidik.\""
+    ];
+
+    let isLoginMode = true;
+
+    window.onload = () => {
+        const quoteEl = document.getElementById('quote');
+        quoteEl.innerText = quotes[Math.floor(Math.random() * quotes.length)];
+        setTimeout(() => {
+            const splash = document.getElementById('splash-screen');
+            if(splash) {
+                splash.style.opacity = '0';
+                setTimeout(() => splash.style.display = 'none', 800);
+            }
+        }, 3000);
+    };
+
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        const icon = type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️');
+        toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'slideInRight 0.5s ease reverse forwards';
+            setTimeout(() => toast.remove(), 500);
+        }, 4000);
+    }
+
+    function togglePasswordVisibility() {
+        const passInput = document.getElementById('auth-password');
+        const icon = document.querySelector('.toggle-password');
+        passInput.type = passInput.type === "password" ? "text" : "password";
+        icon.innerText = passInput.type === "password" ? "🙈" : "👁️";
+    }
+
+    function toggleAuthMode(forceRegister = false) {
+        if (forceRegister === true) {
+            isLoginMode = false;
+        } else {
+            isLoginMode = !isLoginMode;
+        }
+
+        const card = document.querySelector('.auth-card');
+        card.classList.remove('animate__zoomIn', 'animate__flipInY');
+        void card.offsetWidth; 
+        card.classList.add('animate__flipInY');
+        
+        document.getElementById('auth-subtitle').innerText = isLoginMode ? "Silakan masuk ke akun Anda" : "Lengkapi data untuk mendaftar";
+        document.getElementById('main-auth-btn').innerText = isLoginMode ? "Masuk Sekarang" : "Buat Akun Guru";
+        document.getElementById('toggle-text').innerHTML = isLoginMode ? 
+            "Belum memiliki akun? <b onclick='toggleAuthMode()'>Daftar Disini</b>" : 
+            "Sudah punya akun? <b onclick='toggleAuthMode()'>Login Disini</b>";
+        
+        document.getElementById('auth-displayname').style.display = isLoginMode ? "none" : "block";
+        document.getElementById('forgot-btn').style.display = isLoginMode ? "block" : "none";
+    }
+
+    async function handleAuth() {
+        const email = document.getElementById('auth-email').value.trim();
+        const pass = document.getElementById('auth-password').value;
+        const displayName = document.getElementById('auth-displayname').value.trim();
+
+        if(!email || !pass) return showToast("Email dan Password wajib diisi!", "error");
+        
+        showToast("Memproses...", "info");
+        
+        try {
+            if(isLoginMode) {
+                await auth.signInWithEmailAndPassword(email, pass);
+                showToast("Berhasil Masuk!", "success");
+            } else {
+                if(!displayName) return showToast("Nama Lengkap wajib diisi!", "error");
+                const userCredential = await auth.createUserWithEmailAndPassword(email, pass);
+                const user = userCredential.user;
+
+                await user.updateProfile({ displayName: displayName });
+                await db.ref('users_data/' + user.uid + '/profil_sekolah').set({
+                    nama_guru: displayName,
+                    mapel: "Belum Diisi",
+                    tp: "2025/2026",
+                    kkm: 70
+                });
+
+                showToast("Akun berhasil dibuat!", "success");
+            }
+        } catch (err) {
+            console.error(err);
+            if (err.code === "auth/wrong-password") {
+                showToast("Password salah!", "error");
+            } else if (err.code === "auth/user-not-found") {
+                showToast("Email tidak terdaftar.", "error");
+                setTimeout(() => toggleAuthMode(true), 1500); 
+            } else if (err.code === "auth/email-already-in-use") {
+                showToast("Email sudah terdaftar. Silakan LOGIN.", "error");
+                if(!isLoginMode) toggleAuthMode();
+            } else {
+                showToast(err.message, "error");
+            }
+        }
+    }
+
+    function forgotPassword() {
+        const email = document.getElementById('auth-email').value.trim();
+        if(!email) return showToast("Isi email untuk reset password", "error");
+        auth.sendPasswordResetEmail(email).then(() => {
+            showToast("Link reset dikirim ke email", "success");
+        }).catch(err => showToast(err.message, "error"));
+    }
+
+    // Listener Login tunggal
+    auth.onAuthStateChanged(user => {
+        if(user) {
+            // Memberi jeda sebentar agar user melihat toast sukses
+            setTimeout(() => {
+                window.location.replace("dashboard.html");
+            }, 1200);
+        }
+    });
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Service Worker terdaftar:', reg.scope))
+                .catch(err => console.warn('Service Worker gagal:', err));
+        });
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cetak Laporan - PenaAnalisis</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+    <!-- jsPDF dan html2canvas untuk generate PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            background: white;
+            padding: 28px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 20px;
+        }
+
+        .header img {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+            border-radius: 0;
+            border: none;
+            background: transparent;
+        }
+
+        .header-text {
+            text-align: left;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            margin: 5px 0 0 0;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            page-break-inside: avoid;
+        }
+
+        .section h2 {
+            color: #3498db;
+            border-bottom: 1px solid #ecf0f1;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .identitas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .field {
+            margin-bottom: 15px;
+        }
+
+        .field label {
+            display: block;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .field span {
+            display: block;
+            padding: 8px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 12px;
+        }
+
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .status-lulus {
+            background: #d4edda;
+            color: #155724;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .status-remedial {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .btn-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0 10px;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+
+        .footer-signature {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+            align-items: stretch;
+        }
+
+        .signature-card {
+            flex: 1 1 300px;
+            max-width: 340px;
+            padding: 18px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: #f8f9fa;
+            min-width: 220px;
+        }
+
+        .signature-title {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .signature-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #34495e;
+            margin-bottom: 2px;
+        }
+
+        .signature-id {
+            font-size: 14px;
+            color: #5d6d7e;
+            margin-bottom: 14px;
+        }
+
+        .signature-role {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #7f8c8d;
+            text-align: center;
+        }
+
+        .barcode-card {
+            flex: 1 1 240px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: #ffffff;
+            min-width: 240px;
+        }
+
+        .barcode-card svg {
+            width: 100%;
+            height: auto;
+            max-height: 90px;
+            margin-bottom: 10px;
+        }
+
+        .barcode-label {
+            color: #7f8c8d;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #7f8c8d;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 16px;
+                max-width: 100%;
+                width: auto;
+                margin: 0 auto;
+            }
+            .btn-container {
+                display: none;
+            }
+            .header,
+            .footer-signature {
+                justify-content: center;
+            }
+            .footer-signature {
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <img id="logo-kop" src="logo.svg" alt="Logo Sekolah">
+            <div class="header-text">
+                <h1>LAPORAN ANALISIS PENILAIAN</h1>
+                <p>Sistem PenaAnalisis - Analisis Hasil Penilaian Siswa</p>
+                <p id="nama-sekolah" style="margin-top:8px; font-weight:600; color:#2c3e50;">-</p>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <p>Memuat data laporan...</p>
+        </div>
+
+        <div id="report-content" style="display: none;">
+            <!-- Identitas Penilaian -->
+            <div class="section">
+                <h2>1. IDENTITAS PENILAIAN</h2>
+                <div class="identitas-grid">
+                    <div class="field">
+                        <label>Nama Guru:</label>
+                        <span id="nama-guru">-</span>
+                    </div>
+                    <div class="field">
+                        <label>Mata Pelajaran:</label>
+                        <span id="mapel">-</span>
+                    </div>
+                    <div class="field">
+                        <label>Tahun Pelajaran:</label>
+                        <span id="tp">-</span>
+                    </div>
+                    <div class="field">
+                        <label>KKM:</label>
+                        <span id="kkm">-</span>
+                    </div>
+                    <div class="field">
+                        <label>Jumlah Soal:</label>
+                        <span id="jumlah-soal">-</span>
+                    </div>
+                    <div class="field">
+                        <label>Jumlah Peserta:</label>
+                        <span id="jumlah-peserta">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daftar Peserta Didik -->
+            <div class="section">
+                <h2>2. DAFTAR PESERTA DIDIK</h2>
+                <table id="tabel-peserta">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Nama Siswa</th>
+                            <th>Kelas</th>
+                            <th>Skor Mentah</th>
+                            <th>Nilai Konversi</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-peserta">
+                        <!-- Data akan diisi oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Ringkasan Hasil -->
+            <div class="section">
+                <h2>3. RINGKASAN HASIL ANALISIS</h2>
+                <div class="identitas-grid">
+                    <div class="field">
+                        <label>Rata-rata Kelas:</label>
+                        <span id="rata-rata">-</span>
+                    </div>
+                    <div class="field">
+                        <label>Nilai Tertinggi:</label>
+                        <span id="nilai-tertinggi">-</span>
+                    </div>
+                    <div class="field">
+                        <label>Nilai Terendah:</label>
+                        <span id="nilai-terendah">-</span>
+                    </div>
+                    <div class="field">
+                        <label>Jumlah Lulus:</label>
+                        <span id="jumlah-lulus">-</span>
+                    </div>
+                    <div class="field">
+                        <label>Jumlah Remedial:</label>
+                        <span id="jumlah-remedial">-</span>
+                    </div>
+                    <div class="field">
+                        <label>Persentase Kelulusan:</label>
+                        <span id="persentase-kelulusan">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-signature">
+                <div class="signature-card">
+                    <div class="signature-title">Kepala Sekolah</div>
+                    <div class="signature-name" id="kepala-sekolah">-</div>
+                    <div class="signature-id" id="kepala-nip">-</div>
+                    <div class="signature-role">Tanda Tangan</div>
+                </div>
+                <div class="barcode-card">
+                    <svg id="barcode"></svg>
+                    <div class="barcode-label">Scan untuk verifikasi resmi</div>
+                </div>
+                <div class="signature-card">
+                    <div class="signature-title">Guru Penilai</div>
+                    <div class="signature-name" id="nama-guru-footer">-</div>
+                    <div class="signature-id" id="id-guru-footer">-</div>
+                    <div class="signature-role">Tanda Tangan</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-container">
+            <button class="btn" onclick="generatePDF()">Cetak PDF</button>
+            <button class="btn" onclick="printAndReturn()">Cetak Langsung</button>
+            <button class="btn" onclick="window.location.href='dashboard.html'">Kembali ke Dashboard</button>
+        </div>
+    </div>
+
+    <script>
+        // Konfigurasi Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBq93zwNxWHkBs21i-58v0EhpztkaU3_W4",
+            authDomain: "analisis-app-d8d93.firebaseapp.com",
+            projectId: "analisis-app-d8d93",
+            databaseURL: "https://analisis-app-d8d93-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            storageBucket: "analisis-app-d8d93.firebasestorage.app",
+            messagingSenderId: "1088329722308",
+            appId: "1:1088329722308:web:70c80e5b59fc210bff1c91"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        let currentUser = null;
+
+        // Cek autentikasi
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                loadReportData();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        async function loadReportData() {
+            try {
+                // Load profil sekolah
+                const profilRef = db.ref('users_data/' + currentUser.uid + '/profil_sekolah');
+                const profilSnap = await profilRef.once('value');
+                const profil = profilSnap.val();
+
+                if (profil) {
+                    document.getElementById('nama-guru').textContent = profil.nama_guru || '-';
+                    document.getElementById('mapel').textContent = profil.mapel || '-';
+                    document.getElementById('tp').textContent = profil.tp || '-';
+                    document.getElementById('kkm').textContent = profil.kkm || '-';
+                }
+
+                // Ambil nama sekolah dari identitas umum
+                const sekolahRef = db.ref('users_data/' + currentUser.uid + '/profil_sekolah_umum/sekolah');
+                const sekolahSnap = await sekolahRef.once('value');
+                const namaSekolah = sekolahSnap.val() || '-';
+                document.getElementById('nama-sekolah').textContent = namaSekolah;
+
+                const kepalaRef = db.ref('users_data/' + currentUser.uid + '/profil_sekolah_umum/kepala');
+                const kepalaSnap = await kepalaRef.once('value');
+                const namaKepala = kepalaSnap.val() || '-';
+                const nipKepalaRef = db.ref('users_data/' + currentUser.uid + '/profil_sekolah_umum/nip_kepala');
+                const nipKepalaSnap = await nipKepalaRef.once('value');
+                const nipKepala = nipKepalaSnap.val() || '-';
+                document.getElementById('kepala-sekolah').textContent = namaKepala;
+                document.getElementById('kepala-nip').textContent = nipKepala;
+
+                // Ambil data guru dari identitas aktif
+                let guruNamaFooter = profil.nama_guru || '-';
+                let guruIdFooter = '-';
+                const tpAktifRef = db.ref('users_data/' + currentUser.uid + '/pengaturan/tp_aktif');
+                const tpAktifSnap = await tpAktifRef.once('value');
+                const tpAktif = tpAktifSnap.val() || '';
+                if (tpAktif) {
+                    const tpPath = tpAktif.replace(/\//g, '_');
+                    const identitasRef = db.ref(`users_data/${currentUser.uid}/tahun_pelajaran/${tpPath}/identitas`);
+                    const identitasSnap = await identitasRef.once('value');
+                    const identitas = identitasSnap.val() || {};
+                    guruNamaFooter = identitas.nama_guru || guruNamaFooter;
+                    guruIdFooter = identitas.pegid || guruIdFooter;
+                }
+
+                document.getElementById('nama-guru-footer').textContent = guruNamaFooter;
+                document.getElementById('id-guru-footer').textContent = guruIdFooter;
+
+                if (window.JsBarcode && guruIdFooter && guruIdFooter !== '-') {
+                    JsBarcode('#barcode', guruIdFooter, {
+                        format: 'CODE128',
+                        width: 2,
+                        height: 60,
+                        displayValue: true,
+                        margin: 0
+                    });
+                } else {
+                    document.getElementById('barcode').innerHTML = '<text x="10" y="20" font-size="12">ID tidak tersedia</text>';
+                }
+
+                // Ambil logo dari dashboard settings
+                const logoRef = db.ref('users_data/' + currentUser.uid + '/settings/logo_url');
+                const logoSnap = await logoRef.once('value');
+                const logoUrl = logoSnap.val();
+                if (logoUrl) {
+                    document.getElementById('logo-kop').src = logoUrl;
+                }
+
+                // Ambil data kunci jawaban untuk jumlah soal dan kalkulasi
+                const kunciRef = db.ref('users_data/' + currentUser.uid + '/kunci_jawaban');
+                const kunciSnap = await kunciRef.once('value');
+                const kunciRaw = kunciSnap.val() || '';
+                const kunci = kunciRaw.replace(/-/g, '');
+                const jmlSoal = kunci.length;
+
+                const konvRef = db.ref('users_data/' + currentUser.uid + '/konversi_pengaturan/nilai_tertinggi');
+                const konvSnap = await konvRef.once('value');
+                const nilaiMaxKonversi = parseInt(konvSnap.val()) || 100;
+                const kkm = parseInt(profil.kkm) || 70;
+
+                // Ambil kelas aktif dari pengaturan
+                const kelasAktifRef = db.ref('users_data/' + currentUser.uid + '/pengaturan/kelas_aktif');
+                const kelasAktifSnap = await kelasAktifRef.once('value');
+                const kelasAktif = kelasAktifSnap.val();
+
+                if (!kelasAktif) {
+                    alert('Kelas aktif belum dipilih. Silakan pilih kelas di menu Peserta Didik terlebih dahulu.');
+                    window.location.href = 'peserta-didik.html';
+                    return;
+                }
+
+                // Load data peserta berdasarkan kelas aktif
+                const pesertaRef = db.ref('users_data/' + currentUser.uid + '/peserta_didik');
+                const pesertaSnap = await pesertaRef.orderByChild('kelas').equalTo(kelasAktif).once('value');
+                const pesertaData = pesertaSnap.val();
+
+                // Siapkan variabel tabel dan ringkasan
+                const tbody = document.getElementById('tbody-peserta');
+                let no = 1;
+                let totalSkor = 0;
+                let jumlahPeserta = 0;
+                let jumlahLulus = 0;
+                let nilaiTertinggi = 0;
+                let nilaiTerendah = 100;
+
+                // Set jumlah soal
+                document.getElementById('jumlah-soal').textContent = jmlSoal;
+
+                if (pesertaData) {
+                    tbody.innerHTML = '';
+                    Object.keys(pesertaData).forEach(key => {
+                        const siswa = pesertaData[key];
+                        const jawabanSiswa = (siswa.jawaban || '').replace(/-/g, '');
+                        
+                        // Hitung skor benar
+                        let skorBenar = 0;
+                        for (let i = 0; i < jmlSoal; i++) {
+                            if (jawabanSiswa[i] === kunci[i]) {
+                                skorBenar++;
+                            }
+                        }
+
+                        // Kalkulasi nilai konversi
+                        let nilaiKonversi = 0;
+                        if (skorBenar > 0) {
+                            nilaiKonversi = Math.round(kkm + (skorBenar / jmlSoal) * (nilaiMaxKonversi - kkm));
+                        }
+                        if (nilaiKonversi > nilaiMaxKonversi) nilaiKonversi = nilaiMaxKonversi;
+
+                        const status = nilaiKonversi >= kkm ? 'Lulus' : 'Remedial';
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${no}</td>
+                            <td>${siswa.nama || '-'}</td>
+                            <td>${siswa.kelas || '-'}</td>
+                            <td>${skorBenar}</td>
+                            <td>${nilaiKonversi}</td>
+                            <td><span class="status-${status.toLowerCase()}">${status}</span></td>
+                        `;
+                        tbody.appendChild(row);
+
+                        totalSkor += nilaiKonversi;
+                        jumlahPeserta++;
+                        if (status === 'Lulus') jumlahLulus++;
+                        if (nilaiKonversi > nilaiTertinggi) nilaiTertinggi = nilaiKonversi;
+                        if (nilaiKonversi < nilaiTerendah) nilaiTerendah = nilaiKonversi;
+
+                        no++;
+                    });
+
+                    // Update ringkasan
+                    document.getElementById('jumlah-peserta').textContent = jumlahPeserta;
+                    document.getElementById('rata-rata').textContent = jumlahPeserta > 0 ? (totalSkor / jumlahPeserta).toFixed(2) : '-';
+                    document.getElementById('nilai-tertinggi').textContent = nilaiTertinggi;
+                    document.getElementById('nilai-terendah').textContent = nilaiTerendah;
+                    document.getElementById('jumlah-lulus').textContent = jumlahLulus;
+                    document.getElementById('jumlah-remedial').textContent = jumlahPeserta - jumlahLulus;
+                    document.getElementById('persentase-kelulusan').textContent = jumlahPeserta > 0 ? ((jumlahLulus / jumlahPeserta) * 100).toFixed(2) + '%' : '-';
+                }
+
+                // Sembunyikan loading, tampilkan konten
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('report-content').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading report data:', error);
+                alert('Terjadi kesalahan saat memuat data laporan: ' + error.message);
+            }
+        }
+
+        async function generatePDF() {
+            const btnContainer = document.querySelector('.btn-container');
+            const originalDisplay = btnContainer.style.display;
+            btnContainer.style.display = 'none';
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'legal');
+
+            // Ambil elemen container
+            const element = document.querySelector('.container');
+
+            // Gunakan html2canvas untuk convert HTML ke canvas
+            html2canvas(element, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 216; // Legal width in mm
+                const pageHeight = 356; // Legal height in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+
+                let position = 0;
+
+                // Tambahkan gambar pertama
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                // Tambahkan halaman baru jika diperlukan
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                // Simpan PDF
+                pdf.save('laporan-analisis-penilaian.pdf');
+                btnContainer.style.display = originalDisplay;
+            }).catch(error => {
+                console.error('Error generating PDF:', error);
+                btnContainer.style.display = originalDisplay;
+                alert('Terjadi kesalahan saat membuat PDF');
+            });
+        }
+
+        function printAndReturn() {
+            const btnContainer = document.querySelector('.btn-container');
+            const originalDisplay = btnContainer.style.display;
+            btnContainer.style.display = 'none';
+
+            window.onafterprint = function() {
+                window.location.href = 'dashboard.html';
+            };
+
+            window.print();
+            btnContainer.style.display = originalDisplay;
+        }
+    </script>
+
+</body>
+</html>

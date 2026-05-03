@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Peserta Didik</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+    <style>
+        :root {
+            --primary: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --gray-bg: #f4f7f6;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background: white; margin: 0; padding: 20px; color: #333; }
+        h2 { font-size: 18px; margin-bottom: 20px; color: #2c3e50; }
+
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #fff;
+        }
+
+        .filter-section {
+            background: #eef7ff;
+            border: 1px solid #b6d4fe;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .card-title { font-size: 14px; font-weight: bold; margin-bottom: 15px; display: block; }
+        .form-inline { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #666; }
+        
+        input, select {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+            transition: 0.3s;
+        }
+        .btn-tambah { background: var(--success); }
+        .btn-update { background: var(--primary); }
+        .btn-batal { background: #7f8c8d; }
+        .btn-edit { background: var(--warning); padding: 4px 10px; margin-right: 5px; }
+        .btn-hapus { background: var(--danger); padding: 4px 10px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+        th { background: #f8f9fa; color: #555; text-align: left; padding: 12px 10px; border: 1px solid #dee2e6; }
+        td { padding: 10px; border: 1px solid #dee2e6; vertical-align: middle; }
+        tr:nth-child(even) { background-color: #fcfcfc; }
+        
+        .text-center { text-align: center; }
+        .uppercase { text-transform: uppercase; }
+        .filter-label { font-weight: bold; color: #004085; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <h2>2. PESERTA DIDIK</h2>
+
+    <!-- FILTER KELAS (SINKRONISASI UTAMA) -->
+    <div class="filter-section">
+        <span class="filter-label">Pilih Kelas Aktif:</span>
+        <select id="filter_kelas" onchange="gantiKelasAktif(this.value)" style="width: 150px; font-weight: bold; border-color: var(--primary);">
+            <option value="">Memuat...</option>
+        </select>
+        <small style="color: #666;">*Data di Menu 3, 4, 5, dan 6 akan ikut berganti sesuai kelas ini.</small>
+    </div>
+
+    <!-- FORM PENGISIAN -->
+    <div class="card">
+        <span id="form-label" class="card-title">Tambah Siswa Baru</span>
+        <div class="form-inline">
+            <input type="hidden" id="edit_key">
+            <div class="form-group">
+                <label>Nama Siswa</label>
+                <input type="text" id="in_nama" placeholder="Masukkan nama..." style="width: 250px;">
+            </div>
+            <div class="form-group">
+                <label>L/P</label>
+                <select id="in_lp">
+                    <option value="L">Laki-laki (L)</option>
+                    <option value="P">Perempuan (P)</option>
+                </select>
+            </div>
+            
+            <button id="btn-submit" class="btn btn-tambah" onclick="simpanSiswa()">Tambah</button>
+            <button id="btn-batal" class="btn btn-batal" onclick="resetForm()" style="display:none;">Batal</button>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th width="40" class="text-center">No</th>
+                <th>Nama Peserta Didik</th>
+                <th width="100" class="text-center">Kelas</th>
+                <th width="60" class="text-center">L/P</th>
+                <th width="150" class="text-center">Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="tabel-siswa">
+            <tr><td colspan="5" class="text-center">Pilih kelas terlebih dahulu...</td></tr>
+        </tbody>
+    </table>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBq93zwNxWHkBs21i-58v0EhpztkaU3_W4",
+        authDomain: "analisis-app-d8d93.firebaseapp.com",
+        databaseURL: "https://analisis-app-d8d93-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "analisis-app-d8d93",
+        storageBucket: "analisis-app-d8d93.firebasestorage.app",
+        messagingSenderId: "1088329722308",
+        appId: "1:1088329722308:web:70c80e5b59fc210bff1c91"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let uid = "";
+    let kelasSekarang = "";
+
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            uid = user.uid;
+            initHalaman();
+        }
+    });
+
+    async function initHalaman() {
+        // 1. Ambil TP Aktif untuk menentukan path list_kelas
+        db.ref(`users_data/${uid}/pengaturan/tp_aktif`).on('value', (sTP) => {
+            const tp = sTP.val();
+            if (!tp) {
+                document.getElementById('filter_kelas').innerHTML = '<option value="">TP Belum Diatur</option>';
+                return;
+            }
+            const tpPath = tp.replace(/\//g, '_');
+
+            // 2. Load Opsi Kelas dari Identitas Penilaian (Menu 1) sesuai TP aktif
+            db.ref(`users_data/${uid}/tahun_pelajaran/${tpPath}/identitas/list_kelas`).on('value', (snap) => {
+                const list = snap.val() || [];
+                const filterSelect = document.getElementById('filter_kelas');
+                filterSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+                
+                list.forEach(kls => {
+                    let opt = document.createElement('option');
+                    opt.value = kls; 
+                    opt.text = "Kelas " + kls;
+                    filterSelect.appendChild(opt);
+                });
+
+                // 3. Sinkronkan dengan Kelas Aktif yang tersimpan di pengaturan global
+                db.ref(`users_data/${uid}/pengaturan/kelas_aktif`).once('value', (sAktif) => {
+                    if(sAktif.exists()) {
+                        kelasSekarang = sAktif.val();
+                        filterSelect.value = kelasSekarang;
+                        loadSiswa();
+                    }
+                });
+            });
+        });
+    }
+
+    function gantiKelasAktif(kelas) {
+        if(!kelas) return;
+        kelasSekarang = kelas;
+        // Simpan ke pengaturan global agar menu lain ikut berubah
+        db.ref(`users_data/${uid}/pengaturan/kelas_aktif`).set(kelas)
+        .then(() => {
+            loadSiswa();
+        });
+    }
+
+    function simpanSiswa() {
+        if(!kelasSekarang) return alert("Pilih kelas di bagian atas terlebih dahulu!");
+        
+        const key = document.getElementById('edit_key').value;
+        const nama = document.getElementById('in_nama').value.trim();
+        const lp = document.getElementById('in_lp').value;
+
+        if(!nama) return alert("Nama tidak boleh kosong!");
+
+        const dataSiswa = {
+            nama: nama.toUpperCase(),
+            kelas: kelasSekarang,
+            lp: lp
+        };
+
+        if(key) {
+            db.ref(`users_data/${uid}/peserta_didik/${key}`).update(dataSiswa)
+            .then(() => { resetForm(); });
+        } else {
+            const newKey = db.ref().child(`users_data/${uid}/peserta_didik`).push().key;
+            db.ref(`users_data/${uid}/peserta_didik/${newKey}`).set(dataSiswa)
+            .then(() => { resetForm(); });
+        }
+    }
+
+    function loadSiswa() {
+        if(!kelasSekarang) return;
+        
+        db.ref(`users_data/${uid}/peserta_didik`).orderByChild("kelas").equalTo(kelasSekarang)
+        .on('value', (snap) => {
+            const tbody = document.getElementById('tabel-siswa');
+            tbody.innerHTML = "";
+            let no = 1;
+            
+            snap.forEach((child) => {
+                const s = child.val();
+                const key = child.key;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="text-center">${no++}</td>
+                        <td class="uppercase"><b>${s.nama}</b></td>
+                        <td class="text-center">${s.kelas}</td>
+                        <td class="text-center">${s.lp}</td>
+                        <td class="text-center">
+                            <button class="btn btn-edit" onclick="isiDataKeForm('${key}', '${s.nama}', '${s.lp}')">Edit</button>
+                            <button class="btn btn-hapus" onclick="hapusSiswa('${key}')">Hapus</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            if(no === 1) tbody.innerHTML = `<tr><td colspan='5' class='text-center'>Belum ada data siswa di kelas ${kelasSekarang}.</td></tr>`;
+        });
+    }
+
+    function isiDataKeForm(key, nama, lp) {
+        document.getElementById('edit_key').value = key;
+        document.getElementById('in_nama').value = nama;
+        document.getElementById('in_lp').value = lp;
+        document.getElementById('form-label').innerText = "Edit Data Siswa - Kelas " + kelasSekarang;
+        const btn = document.getElementById('btn-submit');
+        btn.innerText = "Update";
+        btn.className = "btn btn-update";
+        document.getElementById('btn-batal').style.display = "inline-block";
+        document.getElementById('in_nama').focus();
+    }
+
+    function resetForm() {
+        document.getElementById('edit_key').value = "";
+        document.getElementById('in_nama').value = "";
+        document.getElementById('form-label').innerText = "Tambah Siswa Baru";
+        const btn = document.getElementById('btn-submit');
+        btn.innerText = "Tambah";
+        btn.className = "btn btn-tambah";
+        document.getElementById('btn-batal').style.display = "none";
+    }
+
+    function hapusSiswa(key) {
+        if(confirm("Hapus data siswa ini?")) {
+            db.ref(`users_data/${uid}/peserta_didik/${key}`).remove();
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5. Analisis Butir Soal - Terfilter Kelas</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+    <style>
+        :root {
+            --primary-blue: #3498db;
+            --border-color: #dee2e6;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background: white; margin: 0; padding: 20px; color: #333; }
+        h2 { font-size: 18px; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 10px; text-transform: uppercase; }
+
+        .info-header {
+            background: #e7f3fe;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #31708f;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+        th { background: #f8f9fa; color: #333; padding: 12px 8px; border: 1px solid var(--border-color); text-align: center; }
+        td { padding: 10px 8px; border: 1px solid var(--border-color); text-align: center; }
+        
+        .header-group { background: #f1f3f5; font-weight: bold; }
+        tr:nth-child(even) { background-color: #fcfcfc; }
+
+        .text-bold { font-weight: bold; }
+        .diterima { color: #27ae60; font-weight: bold; }
+        .ditolak { color: #e74c3c; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h2>5. ANALISIS BUTIR SOAL</h2>
+    
+    <div class="info-header">
+        <span id="label-kelas">Memuat kelas...</span>
+        <span id="label-jumlah">Jumlah Siswa: 0</span>
+    </div>
+
+    <table id="tabel-analisis">
+        <thead>
+            <tr>
+                <th rowspan="2" width="50">No</th>
+                <th colspan="2" class="header-group">Tingkat Kesukaran</th>
+                <th colspan="2" class="header-group">Daya Pembeda</th>
+                <th class="header-group">Kriteria</th>
+            </tr>
+            <tr>
+                <th width="100">Indeks</th>
+                <th width="150">Kategori</th>
+                <th width="100">Indeks</th>
+                <th width="150">Kategori</th>
+                <th width="150">Keputusan</th>
+            </tr>
+        </thead>
+        <tbody id="isi-analisis">
+            <tr><td colspan="6">Menghitung data analisis berdasarkan kelas...</td></tr>
+        </tbody>
+    </table>
+
+<script>
+    // Konfigurasi Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBq93zwNxWHkBs21i-58v0EhpztkaU3_W4",
+        authDomain: "analisis-app-d8d93.firebaseapp.com",
+        databaseURL: "https://analisis-app-d8d93-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "analisis-app-d8d93",
+        storageBucket: "analisis-app-d8d93.firebasestorage.app",
+        messagingSenderId: "1088329722308",
+        appId: "1:1088329722308:web:70c80e5b59fc210bff1c91"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let uid = "";
+
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            uid = user.uid;
+            prosesAnalisis();
+        }
+    });
+
+    async function prosesAnalisis() {
+        const isiTabel = document.getElementById('isi-analisis');
+
+        // 1. Ambil Kelas Aktif dari path pengaturan yang sama dengan Menu 2
+        const snapKelas = await db.ref(`users_data/${uid}/pengaturan/kelas_aktif`).once('value');
+        const kelasAktif = snapKelas.val();
+
+        if (!kelasAktif) {
+            isiTabel.innerHTML = "<tr><td colspan='6'>Silakan pilih kelas di Menu Peserta Didik terlebih dahulu.</td></tr>";
+            document.getElementById('label-kelas').innerText = "Kelas belum dipilih";
+            return;
+        }
+
+        document.getElementById('label-kelas').innerText = `Analisis Kelas: ${kelasAktif}`;
+
+        // 2. Ambil Kunci Jawaban & Bersihkan
+        const snapKunci = await db.ref(`users_data/${uid}/kunci_jawaban`).once('value');
+        const kunci = (snapKunci.val() || "").replace(/-/g, "");
+        const jumlahSoal = kunci.length;
+
+        if (jumlahSoal === 0) {
+            isiTabel.innerHTML = "<tr><td colspan='6'>Kunci jawaban belum diisi.</td></tr>";
+            return;
+        }
+
+        // 3. Ambil & Filter Siswa sesuai Kelas Aktif secara efisien
+        const snapSiswa = await db.ref(`users_data/${uid}/peserta_didik`)
+                            .orderByChild("kelas")
+                            .equalTo(kelasAktif)
+                            .once('value');
+
+        let dataSiswa = [];
+        snapSiswa.forEach(child => {
+            let s = child.val();
+            let jwb = (s.jawaban || "").replace(/-/g, "");
+            let skorTotal = 0;
+            
+            // Hitung skor untuk sorting Daya Pembeda
+            for(let i=0; i<jumlahSoal; i++) {
+                if(jwb[i] === kunci[i]) skorTotal++;
+            }
+            dataSiswa.push({ jwb: jwb, skorTotal: skorTotal });
+        });
+
+        document.getElementById('label-jumlah').innerText = `Jumlah Siswa: ${dataSiswa.length}`;
+
+        // Validasi minimal 2 siswa untuk analisis
+        if(dataSiswa.length < 2) {
+            isiTabel.innerHTML = `<tr><td colspan='6'>Dibutuhkan minimal 2 siswa di kelas ${kelasAktif} untuk analisis.</td></tr>`;
+            return;
+        }
+
+        // 4. Perhitungan Statistik
+        dataSiswa.sort((a, b) => b.skorTotal - a.skorTotal);
+        const nGrup = Math.max(1, Math.round(dataSiswa.length * 0.27)); 
+        const grupAtas = dataSiswa.slice(0, nGrup);
+        const grupBawah = dataSiswa.slice(-nGrup);
+
+        let htmlRows = "";
+        for(let i = 0; i < jumlahSoal; i++) {
+            // A. Tingkat Kesukaran (P)
+            let benarTotal = dataSiswa.filter(s => s.jwb[i] === kunci[i]).length;
+            let p = (benarTotal / dataSiswa.length).toFixed(2);
+            let katP = p <= 0.30 ? "Sukar" : (p <= 0.70 ? "Sedang" : "Mudah");
+
+            // B. Daya Pembeda (D)
+            let ba = grupAtas.filter(s => s.jwb[i] === kunci[i]).length;
+            let bb = grupBawah.filter(s => s.jwb[i] === kunci[i]).length;
+            let d = ((ba - bb) / nGrup).toFixed(2);
+            let katD = d <= 0.20 ? "Jelek" : (d <= 0.40 ? "Cukup" : "Baik");
+
+            // C. Keputusan
+            let keputusan = d > 0.20 ? "<span class='diterima'>Diterima</span>" : "<span class='ditolak'>Ditolak</span>";
+
+            htmlRows += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${p}</td>
+                    <td>${katP}</td>
+                    <td>${d}</td>
+                    <td>${katD}</td>
+                    <td class="text-bold">${keputusan}</td>
+                </tr>
+            `;
+        }
+        isiTabel.innerHTML = htmlRows;
+    }
+</script>
+</body>
+</html>

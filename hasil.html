@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6. Laporan Hasil Analisis Akhir - Terfilter Kelas</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+    <style>
+        :root {
+            --primary-blue: #3498db;
+            --border-color: #dee2e6;
+            --success-bg: #e8f5e9;
+            --success-text: #27ae60;
+            --danger-bg: #fdeaea;
+            --danger-text: #e74c3c;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: white; margin: 0; padding: 20px; color: #333; }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        h2 { font-size: 18px; color: #2c3e50; margin: 0; text-transform: uppercase; }
+
+        .stats-summary {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            font-size: 12px;
+        }
+
+        .badge-kelas {
+            background: var(--primary-blue);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #f8f9fa; color: #555; padding: 12px 10px; border: 1px solid var(--border-color); text-align: center; }
+        td { padding: 10px; border: 1px solid var(--border-color); vertical-align: middle; }
+        
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .text-bold { font-weight: bold; }
+        .uppercase { text-transform: uppercase; }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 10px;
+            display: inline-block;
+            text-align: center;
+            min-width: 85px;
+        }
+        .lulus { background: var(--success-bg); color: var(--success-text); }
+        .remedial { background: var(--danger-bg); color: var(--danger-text); }
+
+        tr:nth-child(even) { background-color: #fafafa; }
+        .loading { text-align: center; padding: 40px; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <h2>6. HASIL ANALISIS AKHIR <span id="label-kelas" class="badge-kelas">-</span></h2>
+    </div>
+
+    <!-- Ringkasan Statistik -->
+    <div class="stats-summary">
+        <div class="stat-card">KKM: <b id="info-kkm">-</b></div>
+        <div class="stat-card">Skor Maks: <b id="info-skor-max">-</b></div>
+        <div class="stat-card">Target Konversi: <b id="info-nilai-max">-</b></div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th width="50">No</th>
+                <th class="text-left">Nama Siswa</th>
+                <th width="80">Skor</th>
+                <th width="100" style="background:#eef7ff;">Nilai Asli</th>
+                <th width="120" style="background:#fff9e6;">Nilai Konversi</th>
+                <th width="140">Status</th>
+            </tr>
+        </thead>
+        <tbody id="tabel-hasil-akhir">
+            <tr><td colspan="6" class="loading">Menyinkronkan data berdasarkan kelas aktif...</td></tr>
+        </tbody>
+    </table>
+
+<script>
+    // Konfigurasi Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBq93zwNxWHkBs21i-58v0EhpztkaU3_W4",
+        authDomain: "analisis-app-d8d93.firebaseapp.com",
+        databaseURL: "https://analisis-app-d8d93-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "analisis-app-d8d93",
+        storageBucket: "analisis-app-d8d93.firebasestorage.app",
+        messagingSenderId: "1088329722308",
+        appId: "1:1088329722308:web:70c80e5b59fc210bff1c91"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let uid = "";
+
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            uid = user.uid;
+            muatDataLengkap();
+        }
+    });
+
+    async function muatDataLengkap() {
+        const tbody = document.getElementById('tabel-hasil-akhir');
+        
+        try {
+            // 1. Ambil Kelas Aktif dari Menu 2
+            const snapKelas = await db.ref(`users_data/${uid}/pengaturan/kelas_aktif`).once('value');
+            const kelasAktif = snapKelas.val();
+
+            if (!kelasAktif) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center">Silakan pilih kelas di Menu 2 terlebih dahulu.</td></tr>`;
+                return;
+            }
+            document.getElementById('label-kelas').innerText = "KELAS " + kelasAktif;
+
+            // 2. Ambil KKM (Menu 1)
+            const snapKkm = await db.ref(`users_data/${uid}/profil_sekolah/kkm`).once('value');
+            const kkm = parseInt(snapKkm.val()) || 70;
+            document.getElementById('info-kkm').innerText = kkm;
+
+            // 3. Ambil Kunci Jawaban (Menu 3) & Bersihkan "-"
+            const snapKunci = await db.ref(`users_data/${uid}/kunci_jawaban`).once('value');
+            const kunciRaw = snapKunci.val() || "";
+            const kunci = kunciRaw.replace(/-/g, "");
+            const jmlSoal = kunci.length;
+            document.getElementById('info-skor-max').innerText = jmlSoal;
+
+            // 4. Ambil Target Konversi (Menu 4)
+            const snapKonv = await db.ref(`users_data/${uid}/konversi_pengaturan/nilai_tertinggi`).once('value');
+            const nilaiMaxKonversi = parseInt(snapKonv.val()) || 100;
+            document.getElementById('info-nilai-max').innerText = nilaiMaxKonversi;
+
+            // 5. Ambil Siswa yang hanya di KELAS AKTIF (Menu 2)
+            const snapSiswa = await db.ref(`users_data/${uid}/peserta_didik`)
+                                .orderByChild("kelas")
+                                .equalTo(kelasAktif)
+                                .once('value');
+
+            tbody.innerHTML = "";
+            let no = 1;
+
+            if (!snapSiswa.exists() || jmlSoal === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center">Data siswa atau kunci jawaban belum tersedia untuk kelas ini.</td></tr>`;
+                return;
+            }
+
+            snapSiswa.forEach((child) => {
+                const s = child.val();
+                const jawabanSiswa = (s.jawaban || "").replace(/-/g, "");
+                
+                // Hitung Skor Real
+                let skorBenar = 0;
+                for(let i=0; i < jmlSoal; i++) {
+                    if(jawabanSiswa[i] === kunci[i]) {
+                        skorBenar++;
+                    }
+                }
+
+                // Kalkulasi Nilai Asli (Skala 100)
+                let nilaiAsli = Math.round((skorBenar / jmlSoal) * 100);
+                
+                // Kalkulasi Nilai Konversi (Linear Scaling)
+                let nilaiKonversi = 0;
+                if (skorBenar > 0) {
+                    nilaiKonversi = Math.round(kkm + (skorBenar / jmlSoal) * (nilaiMaxKonversi - kkm));
+                }
+                if (nilaiKonversi > nilaiMaxKonversi) nilaiKonversi = nilaiMaxKonversi;
+
+                // Penentuan Status
+                let statusClass = nilaiKonversi >= kkm ? "lulus" : "remedial";
+                let statusText = nilaiKonversi >= kkm ? "LULUS" : "REMEDIAL";
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="text-center">${no++}</td>
+                        <td class="uppercase text-bold">${s.nama}</td>
+                        <td class="text-center">${skorBenar}</td>
+                        <td class="text-center" style="color:#2980b9;">${nilaiAsli}</td>
+                        <td class="text-center text-bold" style="font-size:14px; color:#d35400;">${nilaiKonversi}</td>
+                        <td class="text-center">
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+        } catch (error) {
+            console.error("Error:", error);
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center">Gagal memuat data. Periksa koneksi Anda.</td></tr>`;
+        }
+    }
+</script>
+</body>
+</html>

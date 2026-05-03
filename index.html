@@ -83,18 +83,79 @@
         }
         .toast {
             background: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            margin-bottom: 10px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 15px;
             border-left: 5px solid var(--secondary);
             animation: slideInRight 0.5s ease;
+            min-width: 320px;
+            max-width: 450px;
+            position: relative;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
         }
-        .toast.success { border-left-color: var(--accent); }
-        .toast.error { border-left-color: #e74c3c; }
+        
+        .toast.success { 
+            border-left-color: var(--accent); 
+            background: linear-gradient(135deg, #d4edda 0%, #ffffff 100%);
+        }
+        .toast.error { 
+            border-left-color: #e74c3c; 
+            background: linear-gradient(135deg, #f8d7da 0%, #ffffff 100%);
+        }
+        .toast.info { 
+            border-left-color: var(--secondary); 
+            background: linear-gradient(135deg, #d1ecf1 0%, #ffffff 100%);
+        }
+        
+        .toast-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        
+        .toast-content {
+            flex: 1;
+        }
+        
+        .toast-title {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .toast-message {
+            font-size: 13px;
+            line-height: 1.4;
+            color: #555;
+        }
+        
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        
+        .toast-close:hover {
+            background: rgba(0,0,0,0.1);
+            color: #666;
+        }
 
         #auth-container { 
             display: flex; 
@@ -168,6 +229,11 @@
         @keyframes slideInRight {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
         }
     </style>
 </head>
@@ -248,15 +314,41 @@
 
     function showToast(message, type = 'info') {
         const container = document.getElementById('toast-container');
+        
+        // Hapus toast sebelumnya jika ada
+        const existingToasts = container.querySelectorAll('.toast');
+        existingToasts.forEach(toast => toast.remove());
+        
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-        const icon = type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️');
-        toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+        
+        const icons = {
+            success: '🎉',
+            error: '⚠️',
+            info: '💡',
+            warning: '🚨'
+        };
+        
+        const icon = icons[type] || icons.info;
+        toast.innerHTML = `
+            <div class="toast-icon">${icon}</div>
+            <div class="toast-content">
+                <div class="toast-title">${type === 'success' ? 'Berhasil' : type === 'error' ? 'Error' : 'Info'}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+        `;
+        
         container.appendChild(toast);
+        
+        // Auto remove setelah 5 detik untuk success, 7 detik untuk error
+        const duration = type === 'error' ? 7000 : 5000;
         setTimeout(() => {
-            toast.style.animation = 'slideInRight 0.5s ease reverse forwards';
-            setTimeout(() => toast.remove(), 500);
-        }, 4000);
+            if(toast.parentElement) {
+                toast.style.animation = 'slideOutRight 0.5s ease forwards';
+                setTimeout(() => toast.remove(), 500);
+            }
+        }, duration);
     }
 
     function togglePasswordVisibility() {
@@ -293,14 +385,45 @@
         const pass = document.getElementById('auth-password').value;
         const displayName = document.getElementById('auth-displayname').value.trim();
 
-        if(!email || !pass) return showToast("Email dan Password wajib diisi!", "error");
+        // Validasi input yang lebih spesifik
+        if(!email) {
+            showToast("Email wajib diisi!", "error");
+            document.getElementById('auth-email').focus();
+            return;
+        }
+        
+        if(!pass) {
+            showToast("Password wajib diisi!", "error");
+            document.getElementById('auth-password').focus();
+            return;
+        }
+
+        if(!isLoginMode && !displayName) {
+            showToast("Nama Lengkap wajib diisi untuk pendaftaran!", "error");
+            document.getElementById('auth-displayname').focus();
+            return;
+        }
+        
+        // Validasi format email sederhana
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if(!emailRegex.test(email)) {
+            showToast("Format email tidak valid!", "error");
+            document.getElementById('auth-email').focus();
+            return;
+        }
+
+        if(pass.length < 6) {
+            showToast("Password minimal 6 karakter!", "error");
+            document.getElementById('auth-password').focus();
+            return;
+        }
         
         showToast("Memproses...", "info");
         
         try {
             if(isLoginMode) {
                 await auth.signInWithEmailAndPassword(email, pass);
-                showToast("Berhasil Masuk!", "success");
+                showToast("Berhasil Masuk! Selamat datang kembali.", "success");
             } else {
                 if(!displayName) return showToast("Nama Lengkap wajib diisi!", "error");
                 const userCredential = await auth.createUserWithEmailAndPassword(email, pass);
@@ -314,20 +437,35 @@
                     kkm: 70
                 });
 
-                showToast("Akun berhasil dibuat!", "success");
+                showToast("Akun berhasil dibuat! Selamat bergabung.", "success");
             }
         } catch (err) {
             console.error(err);
             if (err.code === "auth/wrong-password") {
-                showToast("Password salah!", "error");
+                showToast("Password yang Anda masukkan salah. Silakan coba lagi.", "error");
+                document.getElementById('auth-password').focus();
+                document.getElementById('auth-password').select();
             } else if (err.code === "auth/user-not-found") {
-                showToast("Email tidak terdaftar.", "error");
-                setTimeout(() => toggleAuthMode(true), 1500); 
+                showToast("Email belum terdaftar. Akan dialihkan ke halaman pendaftaran...", "error");
+                setTimeout(() => {
+                    toggleAuthMode(true);
+                    document.getElementById('auth-displayname').focus();
+                }, 2000);
             } else if (err.code === "auth/email-already-in-use") {
-                showToast("Email sudah terdaftar. Silakan LOGIN.", "error");
-                if(!isLoginMode) toggleAuthMode();
+                showToast("Email sudah terdaftar. Silakan login dengan akun tersebut.", "error");
+                if(!isLoginMode) {
+                    setTimeout(() => toggleAuthMode(), 1500);
+                }
+            } else if (err.code === "auth/weak-password") {
+                showToast("Password terlalu lemah. Gunakan kombinasi huruf dan angka.", "error");
+                document.getElementById('auth-password').focus();
+            } else if (err.code === "auth/invalid-email") {
+                showToast("Format email tidak valid!", "error");
+                document.getElementById('auth-email').focus();
+            } else if (err.code === "auth/too-many-requests") {
+                showToast("Terlalu banyak percobaan. Coba lagi nanti.", "error");
             } else {
-                showToast(err.message, "error");
+                showToast("Terjadi kesalahan: " + err.message, "error");
             }
         }
     }

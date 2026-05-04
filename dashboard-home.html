@@ -349,6 +349,14 @@
             }
         ];
 
+        function resolveSettings(snapshotValue) {
+            const raw = snapshotValue || {};
+            if (raw.Data && typeof raw.Data === 'object') {
+                return raw.Data;
+            }
+            return raw;
+        }
+
         function initDashboard() {
             const menuGrid = document.getElementById('menu-grid');
             menuGrid.innerHTML = menuItems.map(item => `
@@ -362,9 +370,19 @@
             auth.onAuthStateChanged(user => {
                 if (user) {
                     db.ref('app_settings').once('value', snap => {
-                        const settings = snap.val() || {};
-                        const devUid = settings.developer_uid || '';
+                        const settings = resolveSettings(snap.val());
+                        let devUid = settings.developer_uid || '';
                         const devEmail = settings.developer_email || '';
+                        const emailFallback = devEmail || '';
+
+                        if (devUid === 'UID_DEVELOPER') {
+                            devUid = '';
+                        }
+
+                        if (!devUid && emailFallback === user.email) {
+                            devUid = user.uid;
+                            db.ref('app_settings').update({ developer_uid: devUid, developer_email: emailFallback }).catch(() => {});
+                        }
 
                         if (devUid) {
                             db.ref('users_data/' + devUid + '/about_info').on('value', snap => {
@@ -380,7 +398,7 @@
                         }
 
                         const editButton = document.getElementById('edit-about-btn');
-                        const isDev = (user.uid === devUid);
+                        const isDev = devUid && user.uid === devUid;
                         if (isDev) {
                             const panel = document.getElementById('developer-panel');
                             panel.style.display = 'block';

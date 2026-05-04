@@ -220,21 +220,42 @@
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUser = user;
-                checkIfDeveloper(user.uid);
+                checkIfDeveloper(user.uid, user.email);
                 loadAboutInfo();
             }
         });
 
-        function checkIfDeveloper(uid) {
+        function resolveSettings(snapshotValue) {
+            const raw = snapshotValue || {};
+            if (raw.Data && typeof raw.Data === 'object') {
+                return raw.Data;
+            }
+            return raw;
+        }
+
+        function checkIfDeveloper(uid, email) {
             // Ambil developer uid dari database
-            db.ref('app_settings/developer_uid').once('value', snap => {
-                const devUid = snap.val();
+            db.ref('app_settings').once('value', snap => {
+                const settings = resolveSettings(snap.val());
+                let devUid = settings.developer_uid || '';
+                const devEmail = settings.developer_email || '';
+
+                if (devUid === 'UID_DEVELOPER') {
+                    devUid = '';
+                }
+
+                if (!devUid && devEmail && email === devEmail) {
+                    devUid = uid;
+                    db.ref('app_settings').update({ developer_uid: uid, developer_email: devEmail }).catch(() => {});
+                }
+
+                if (!devUid && email === "alikhaidir052@gmail.com") {
+                    devUid = uid;
+                    db.ref('app_settings').update({ developer_uid: uid, developer_email: email }).catch(() => {});
+                }
+
                 if (devUid) {
                     isDeveloper = (uid === devUid);
-                } else {
-                    // Jika belum ada developer uid, set user pertama sebagai developer
-                    db.ref('app_settings/developer_uid').set(uid);
-                    isDeveloper = true;
                 }
                 updateUIPermission();
             });
@@ -263,8 +284,15 @@
 
         function loadAboutInfo() {
             // Load About Info dari developer, bukan dari currentUser
-            db.ref('app_settings/developer_uid').once('value', snap => {
-                const devUid = snap.val();
+            db.ref('app_settings').once('value', snap => {
+                const settings = resolveSettings(snap.val());
+                let devUid = settings.developer_uid || '';
+                if (devUid === 'UID_DEVELOPER') {
+                    devUid = '';
+                }
+                if (!devUid && settings.developer_email === currentUser.email) {
+                    devUid = currentUser.uid;
+                }
                 if (devUid) {
                     db.ref(`users_data/${devUid}/about_info`).on('value', snap => {
                         const data = snap.val() || {};
@@ -308,11 +336,18 @@
                 didOpen: () => Swal.showLoading()
             });
 
-            db.ref('app_settings/developer_uid').once('value', snap => {
-                let devUid = snap.val();
+            db.ref('app_settings').once('value', snap => {
+                const settings = resolveSettings(snap.val());
+                let devUid = settings.developer_uid || '';
+                const devEmail = settings.developer_email || '';
+
+                if (devUid === 'UID_DEVELOPER') {
+                    devUid = '';
+                }
+
                 if (!devUid) {
                     devUid = currentUser.uid;
-                    db.ref('app_settings/developer_uid').set(devUid);
+                    db.ref('app_settings').update({ developer_uid: devUid, developer_email: devEmail || currentUser.email }).catch(() => {});
                 }
 
                 db.ref('users_data/' + devUid + '/about_info').set(aboutData).then(() => {

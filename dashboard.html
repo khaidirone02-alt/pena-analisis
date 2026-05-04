@@ -45,7 +45,7 @@
         }
 
         .logo-circle {
-            width: 90px; height: 90px;
+            width: 110px; height: 110px;
             background: white;
             border-radius: 50%;
             margin: 0 auto 10px;
@@ -66,6 +66,7 @@
             width: 100%; 
             height: 100%; 
             object-fit: cover; 
+            display: block;
         }
 
         .logo-circle::after {
@@ -81,6 +82,15 @@
             transition: 0.3s;
         }
         .logo-circle:hover::after { opacity: 1; }
+
+        .logo-hint {
+            margin-top: 6px;
+            font-size: 12px;
+            color: rgba(236,239,241,0.8);
+            text-align: center;
+            line-height: 1.3;
+            letter-spacing: 0.2px;
+        }
 
         #sidebar-tp-display {
             font-size: 12px;
@@ -285,8 +295,9 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="logo-circle" onclick="document.getElementById('logo-input').click()">
-                <img id="display-logo" src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Logo_Ikhlas_Beramal_Kemenag.png" alt="Logo">
+                <img id="display-logo" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><circle cx='64' cy='64' r='64' fill='%23ffffff'/><circle cx='64' cy='42' r='26' fill='%23bdc3c7'/><path d='M20 110c0-27 22-50 50-50s50 23 50 50H20z' fill='%23bdc3c7'/></svg>" alt="Logo">
             </div>
+            <div class="logo-hint">Klik untuk unggah logo</div>
 
             <div id="sidebar-tp-display">TP: Memuat...</div>
 
@@ -324,13 +335,16 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const auth = firebase.auth();
+        const placeholderLogo = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><circle cx='64' cy='64' r='64' fill='%23ffffff'/><circle cx='64' cy='42' r='26' fill='%23bdc3c7'/><path d='M20 110c0-27 22-50 50-50s50 23 50 50H20z' fill='%23bdc3c7'/></svg>";
 
         auth.onAuthStateChanged((user) => {
             if (user) {
+                const logoImage = document.getElementById('display-logo');
+                logoImage.src = placeholderLogo;
+
                 db.ref('users_data/' + user.uid + '/settings/logo_url').on('value', (snapshot) => {
-                    if (snapshot.exists()) {
-                        document.getElementById('display-logo').src = snapshot.val();
-                    }
+                    const value = snapshot.val();
+                    logoImage.src = value && value !== '' ? value : placeholderLogo;
                 });
 
                 db.ref('users_data/' + user.uid + '/pengaturan/tp_aktif').on('value', (snapshot) => {

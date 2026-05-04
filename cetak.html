@@ -38,7 +38,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: clamp(12px, 2.5vw, 20px);
+            gap: clamp(16px, 3vw, 24px);
             margin-bottom: clamp(20px, 4vw, 30px);
             border-bottom: 2px solid #3498db;
             padding-bottom: clamp(15px, 3vw, 20px);
@@ -46,8 +46,8 @@
         }
 
         .header img {
-            width: clamp(50px, 12vw, 70px);
-            height: clamp(50px, 12vw, 70px);
+            width: clamp(70px, 14vw, 100px);
+            height: clamp(70px, 14vw, 100px);
             object-fit: contain;
             border-radius: 0;
             border: none;
@@ -61,12 +61,20 @@
         .header h1 {
             color: #2c3e50;
             margin: 0;
-            font-size: clamp(20px, 5vw, 28px);
+            font-size: clamp(26px, 5vw, 38px);
+            line-height: 1.1;
         }
 
-        .header p {
+        .kop-middle {
+            color: #2c3e50;
+            margin: clamp(8px, 1.5vw, 10px) 0 0 0;
+            font-size: clamp(18px, 4vw, 22px);
+            font-weight: 700;
+        }
+
+        .kop-bottom {
             color: #7f8c8d;
-            margin: clamp(4px, 1vw, 5px) 0 0 0;
+            margin: clamp(6px, 1vw, 8px) 0 0 0;
             font-size: clamp(12px, 2.5vw, 14px);
         }
 
@@ -182,8 +190,6 @@
             gap: clamp(15px, 3vw, 20px);
             margin-top: clamp(30px, 5vw, 40px);
             flex-wrap: wrap;
-        }
-            flex-wrap: wrap;
             align-items: stretch;
         }
 
@@ -289,8 +295,8 @@
             <img id="logo-kop" src="logo.svg" alt="Logo Sekolah">
             <div class="header-text">
                 <h1>LAPORAN ANALISIS PENILAIAN</h1>
-                <p id="nama-sekolah" style="margin-top:8px; font-weight:600; color:#2c3e50;">-</p>
-                <p id="tp-header" style="margin:5px 0 0 0; font-weight:600; color:#2c3e50; font-size:14px;">-</p>
+                <p class="kop-middle" id="nama-sekolah">-</p>
+                <p class="kop-bottom" id="tp-header">-</p>
             </div>
         </div>
 

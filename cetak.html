@@ -273,8 +273,8 @@
             <img id="logo-kop" src="logo.svg" alt="Logo Sekolah">
             <div class="header-text">
                 <h1>LAPORAN ANALISIS PENILAIAN</h1>
-                <p>Sistem PenaAnalisis - Analisis Hasil Penilaian Siswa</p>
                 <p id="nama-sekolah" style="margin-top:8px; font-weight:600; color:#2c3e50;">-</p>
+                <p id="tp-header" style="margin:5px 0 0 0; font-weight:600; color:#2c3e50; font-size:14px;">-</p>
             </div>
         </div>
 
@@ -458,6 +458,7 @@
                 document.getElementById('nama-guru').textContent = identitas.nama_guru || '-';
                 document.getElementById('mapel').textContent = identitas.mapel || '-';
                 document.getElementById('tp').textContent = tpAktif || '-';
+                document.getElementById('tp-header').textContent = 'Tahun Pelajaran ' + (tpAktif || '-');
                 document.getElementById('kkm').textContent = identitas.kkm || '-';
                 document.getElementById('nama-analisis').textContent = identitas.jenis_analisis || identitas.nama_analisis || '-';
 
@@ -673,11 +674,12 @@
 
                 pdf.setFontSize(12);
                 pdf.setFont('helvetica', 'normal');
-                pdf.text('Sistem PenaAnalisis - Analisis Hasil Penilaian Siswa', pageWidth / 2, yPosition, { align: 'center' });
-                yPosition += 8;
-
                 const namaSekolah = document.getElementById('nama-sekolah').textContent;
                 pdf.text(namaSekolah, pageWidth / 2, yPosition, { align: 'center' });
+                yPosition += 6;
+
+                const tpHeader = document.getElementById('tp-header').textContent;
+                pdf.text(tpHeader, pageWidth / 2, yPosition, { align: 'center' });
                 yPosition += 15;
 
                 // 1. IDENTITAS PENILAIAN

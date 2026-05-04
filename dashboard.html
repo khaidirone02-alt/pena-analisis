@@ -309,20 +309,22 @@
         </div>
         
         <div class="nav-menu">
-            <div class="nav-item active" onclick="loadPage('Identitas Penilaian.html', this)">1. Profil Guru & Sekolah</div>
+            <div class="nav-item active" onclick="loadPage('dashboard-home.html', this)">🏠 Beranda</div>
+            <div class="nav-item" onclick="loadPage('Identitas Penilaian.html', this)">1. Profil Guru & Sekolah</div>
             <div class="nav-item" onclick="loadPage('peserta-didik.html', this)">2. Profil Peserta Didik</div>
             <div class="nav-item" onclick="loadPage('input-jawaban.html', this)">3. Input Jawaban Siswa</div>
             <div class="nav-item" onclick="loadPage('konversi.html', this)">4. Konversi Nilai</div>
             <div class="nav-item" onclick="loadPage('analisis.html', this)">5. Analisis Butir Soal</div>
             <div class="nav-item" onclick="loadPage('hasil.html', this)">6. Hasil Analisis Akhir</div>
             <div class="nav-item highlight" onclick="loadPage('cetak.html', this)">7. Cetak Laporan</div>
+            <div class="nav-item" onclick="loadPage('about-info.html', this)">ℹ️ Tentang Saya</div>
             
             <div class="nav-item logout-item" onclick="handleLogout()">🚪 KELUAR APLIKASI</div>
         </div>
     </div>
 
     <div class="main-content">
-        <iframe src="Identitas Penilaian.html" id="content-frame" scrolling="yes"></iframe>
+        <iframe src="dashboard-home.html" id="content-frame" scrolling="yes"></iframe>
     </div>
 
     <script>
@@ -421,13 +423,17 @@
 
         function loadPage(pageUrl, element) {
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            element.classList.add('active');
+            if (element) element.classList.add('active');
             document.getElementById('content-frame').src = pageUrl;
             
             // Close sidebar on mobile after navigation
             if (window.innerWidth <= 768) {
                 toggleSidebar();
             }
+        }
+
+        function editAboutInfo() {
+            loadPage('about-info.html', null);
         }
 
         function toggleSidebar() {

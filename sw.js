@@ -3,12 +3,15 @@ const FILES_TO_CACHE = [
   '/',
   '/index.html',
   '/dashboard.html',
+  '/dashboard-home.html',
   '/Identitas Penilaian.html',
   '/peserta-didik.html',
   '/input-jawaban.html',
   '/konversi.html',
+  '/analisis.html',
   '/hasil.html',
   '/cetak.html',
+  '/about-info.html',
   '/logo.svg',
   '/manifest.json'
 ];

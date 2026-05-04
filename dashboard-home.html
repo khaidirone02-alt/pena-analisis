@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - PenaAnalisis</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+    <style>
+        :root {
+            --primary-blue: #3498db;
+            --primary-dark: #2c3e50;
+            --accent-green: #27ae60;
+            --accent-red: #e74c3c;
+            --gray-light: #ecf0f1;
+            --gray-bg: #f8f9fa;
+            --border-color: #ddd;
+        }
+
+        * { box-sizing: border-box; }
+        html { min-height: 100%; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--gray-bg); 
+            margin: 0; 
+            padding: calc(clamp(10px, 3vw, 20px) + env(safe-area-inset-bottom, 20px));
+            color: #333;
+        }
+
+        .welcome-section {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #2980b9 100%);
+            color: white;
+            padding: clamp(20px, 4vw, 30px);
+            border-radius: 12px;
+            margin-bottom: clamp(25px, 5vw, 35px);
+            box-shadow: 0 8px 16px rgba(52, 152, 219, 0.3);
+        }
+
+        .welcome-section h1 {
+            margin: 0;
+            font-size: clamp(24px, 6vw, 32px);
+            margin-bottom: 8px;
+        }
+
+        .welcome-section p {
+            margin: 0;
+            font-size: clamp(13px, 2.5vw, 15px);
+            opacity: 0.95;
+            line-height: 1.5;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: clamp(15px, 3vw, 25px);
+            margin-bottom: clamp(30px, 5vw, 40px);
+        }
+
+        .menu-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: clamp(20px, 3vw, 25px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+            border-color: var(--primary-blue);
+        }
+
+        .menu-icon {
+            font-size: clamp(40px, 8vw, 56px);
+            margin-bottom: clamp(12px, 2vw, 16px);
+            line-height: 1;
+        }
+
+        .menu-card h3 {
+            margin: 0;
+            font-size: clamp(14px, 3vw, 18px);
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .menu-card p {
+            margin: 0;
+            font-size: clamp(11px, 2vw, 13px);
+            color: #7f8c8d;
+            line-height: 1.4;
+        }
+
+        .about-section {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: clamp(20px, 3vw, 30px);
+            margin-bottom: clamp(30px, 5vw, 40px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .about-section h2 {
+            color: var(--primary-blue);
+            font-size: clamp(18px, 4vw, 22px);
+            margin-top: 0;
+            margin-bottom: clamp(15px, 3vw, 20px);
+            border-bottom: 2px solid var(--gray-light);
+            padding-bottom: 10px;
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: clamp(15px, 3vw, 20px);
+        }
+
+        .about-field {
+            background: var(--gray-bg);
+            padding: clamp(12px, 2vw, 15px);
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        .about-field label {
+            display: block;
+            font-size: clamp(11px, 2vw, 12px);
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .about-field value {
+            display: block;
+            font-size: clamp(13px, 2.5vw, 15px);
+            color: #2c3e50;
+            line-height: 1.4;
+        }
+
+        .edit-about-btn {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: clamp(10px, 2vw, 12px) clamp(16px, 3vw, 20px);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: clamp(12px, 2vw, 14px);
+            transition: 0.3s;
+            margin-top: clamp(12px, 2vw, 15px);
+            min-height: 40px;
+        }
+
+        .edit-about-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: clamp(12px, 2vw, 15px);
+            margin-top: clamp(15px, 3vw, 20px);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #2980b9 100%);
+            color: white;
+            padding: clamp(15px, 2vw, 20px);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: clamp(24px, 5vw, 32px);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: clamp(11px, 2vw, 13px);
+            opacity: 0.95;
+        }
+
+        .bottom-spacer {
+            height: calc(100px + env(safe-area-inset-bottom, 20px));
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .menu-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+
+            .welcome-section {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="welcome-section">
+        <h1>Selamat Datang! 👋</h1>
+        <p>Kelola data penilaian siswa dengan mudah dan profesional.</p>
+    </div>
+
+    <div class="menu-grid" id="menu-grid">
+        <!-- Menu cards akan diisi dinamis -->
+    </div>
+
+    <div class="about-section">
+        <h2>ℹ️ Tentang Aplikasi</h2>
+        <div class="about-content">
+            <div class="about-field">
+                <label>Nama Aplikasi</label>
+                <value>PenaAnalisis</value>
+            </div>
+            <div class="about-field">
+                <label>Versi</label>
+                <value>1.0.0</value>
+            </div>
+            <div class="about-field">
+                <label>Pengembang</label>
+                <value id="developer-name">Memuat...</value>
+            </div>
+            <div class="about-field">
+                <label>Deskripsi</label>
+                <value>Sistem manajemen analisis penilaian siswa untuk guru dan sekolah</value>
+            </div>
+        </div>
+        <button class="edit-about-btn" onclick="window.parent.editAboutInfo()">✏️ Edit Info Profil</button>
+    </div>
+
+    <div class="bottom-spacer"></div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBq93zwNxWHkBs21i-58v0EhpztkaU3_W4",
+            authDomain: "analisis-app-d8d93.firebaseapp.com",
+            databaseURL: "https://analisis-app-d8d93-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "analisis-app-d8d93",
+            storageBucket: "analisis-app-d8d93.firebasestorage.app",
+            messagingSenderId: "1088329722308",
+            appId: "1:1088329722308:web:70c80e5b59fc210bff1c91"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
+
+        const menuItems = [
+            {
+                icon: "👤",
+                title: "Profil Guru & Sekolah",
+                desc: "Kelola identitas penilaian",
+                page: "Identitas Penilaian.html"
+            },
+            {
+                icon: "👨‍🎓",
+                title: "Peserta Didik",
+                desc: "Kelola daftar siswa kelas",
+                page: "peserta-didik.html"
+            },
+            {
+                icon: "✏️",
+                title: "Input Jawaban Siswa",
+                desc: "Masukkan jawaban siswa",
+                page: "input-jawaban.html"
+            },
+            {
+                icon: "📊",
+                title: "Konversi Nilai",
+                desc: "Konversi skor ke nilai",
+                page: "konversi.html"
+            },
+            {
+                icon: "🔍",
+                title: "Analisis Butir Soal",
+                desc: "Analisis tingkat kesukaran",
+                page: "analisis.html"
+            },
+            {
+                icon: "📈",
+                title: "Hasil Analisis Akhir",
+                desc: "Lihat hasil analisis lengkap",
+                page: "hasil.html"
+            },
+            {
+                icon: "🖨️",
+                title: "Cetak Laporan",
+                desc: "Cetak laporan PDF",
+                page: "cetak.html"
+            }
+        ];
+
+        function initDashboard() {
+            const menuGrid = document.getElementById('menu-grid');
+            menuGrid.innerHTML = menuItems.map(item => `
+                <div class="menu-card" onclick="window.parent.loadPage('${item.page}', null)">
+                    <div class="menu-icon">${item.icon}</div>
+                    <h3>${item.title}</h3>
+                    <p>${item.desc}</p>
+                </div>
+            `).join('');
+
+            // Load developer name from Firebase
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    db.ref(`users_data/${user.uid}/pengaturan/nama_guru`).on('value', snap => {
+                        const nama = snap.val() || 'Guru PenaAnalisis';
+                        document.getElementById('developer-name').textContent = nama;
+                    });
+                }
+            });
+        }
+
+        initDashboard();
+    </script>
+
+</body>
+</html>

@@ -308,11 +308,19 @@
                 didOpen: () => Swal.showLoading()
             });
 
-            db.ref('users_data/' + currentUser.uid + '/about_info').set(aboutData).then(() => {
-                Swal.fire('Berhasil', 'Informasi profil Anda telah disimpan', 'success');
-                setTimeout(() => kembaliKeDashboard(), 1500);
-            }).catch(err => {
-                Swal.fire('Gagal', 'Terjadi kesalahan: ' + err.message, 'error');
+            db.ref('app_settings/developer_uid').once('value', snap => {
+                let devUid = snap.val();
+                if (!devUid) {
+                    devUid = currentUser.uid;
+                    db.ref('app_settings/developer_uid').set(devUid);
+                }
+
+                db.ref('users_data/' + devUid + '/about_info').set(aboutData).then(() => {
+                    Swal.fire('Berhasil', 'Informasi profil Anda telah disimpan', 'success');
+                    setTimeout(() => kembaliKeDashboard(), 1500);
+                }).catch(err => {
+                    Swal.fire('Gagal', 'Terjadi kesalahan: ' + err.message, 'error');
+                });
             });
         }
 

@@ -300,10 +300,24 @@
         if (!user || !user.email) return;
 
         const appSettingsRef = db.ref('app_settings');
-        const snap = await appSettingsRef.once('value');
-        const settings = snap.val() || {};
-        const savedDevUid = settings.developer_uid || "";
-        const savedDevEmail = settings.developer_email || "";
+        let savedDevUid = "";
+        let savedDevEmail = "";
+
+        try {
+            const snap = await appSettingsRef.once('value');
+            const settings = snap.val() || {};
+            savedDevUid = settings.developer_uid || "";
+            savedDevEmail = settings.developer_email || "";
+        } catch (err) {
+            console.warn('Tidak dapat membaca app_settings:', err);
+            if (err.code === 'PERMISSION_DENIED' || err.code === 'permission_denied') {
+                if (user.email === DEVELOPER_EMAIL) {
+                    await db.ref('users_data/' + user.uid + '/role').set('developer').catch(() => {});
+                }
+            }
+            return;
+        }
+
         const effectiveDevEmail = savedDevEmail || DEVELOPER_EMAIL || "";
         const isDeveloperEmail = effectiveDevEmail ? user.email === effectiveDevEmail : true;
 
@@ -330,7 +344,9 @@
             updateData.developer_email = user.email;
         }
 
-        await appSettingsRef.update(updateData);
+        await appSettingsRef.update(updateData).catch(err => {
+            console.warn('Tidak dapat memperbarui app_settings:', err);
+        });
         await db.ref('users_data/' + user.uid + '/role').set('developer');
     }
 

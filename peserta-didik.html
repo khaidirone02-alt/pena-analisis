@@ -22,68 +22,72 @@
             --gray-bg: #f4f7f6;
         }
 
-        body { font-family: 'Segoe UI', sans-serif; background: white; margin: 0; padding: 20px; color: #333; }
-        h2 { font-size: 18px; margin-bottom: 20px; color: #2c3e50; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: white; margin: 0; padding: clamp(10px, 3vw, 20px); color: #333; }
+        h2 { font-size: clamp(16px, 4vw, 18px); margin-bottom: clamp(15px, 4vw, 20px); color: #2c3e50; }
 
         .card {
             border: 1px solid #ddd;
             border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: clamp(15px, 3vw, 20px);
+            margin-bottom: clamp(15px, 3vw, 20px);
             background: #fff;
         }
 
         .filter-section {
             background: #eef7ff;
             border: 1px solid #b6d4fe;
-            padding: 15px;
+            padding: clamp(12px, 2.5vw, 15px);
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: clamp(15px, 3vw, 20px);
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: clamp(10px, 2vw, 15px);
+            flex-wrap: wrap;
         }
 
-        .card-title { font-size: 14px; font-weight: bold; margin-bottom: 15px; display: block; }
-        .form-inline { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
+        .card-title { font-size: clamp(12px, 3vw, 14px); font-weight: bold; margin-bottom: clamp(12px, 2vw, 15px); display: block; }
+        .form-inline { display: flex; gap: clamp(10px, 2vw, 15px); align-items: flex-end; flex-wrap: wrap; }
         .form-group { display: flex; flex-direction: column; }
-        label { font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #666; }
+        label { font-size: clamp(10px, 2vw, 12px); font-weight: bold; margin-bottom: clamp(4px, 1vw, 5px); color: #666; }
         
         input, select {
-            padding: 8px 12px;
+            padding: clamp(8px, 2vw, 12px);
             border: 1px solid #ccc;
             border-radius: 4px;
-            font-size: 13px;
+            font-size: clamp(12px, 2.5vw, 14px);
+            min-height: 44px;
         }
 
         .btn {
-            padding: 8px 20px;
+            padding: clamp(8px, 1.5vw, 10px) clamp(15px, 3vw, 20px);
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 12px;
+            font-size: clamp(11px, 2vw, 13px);
             color: white;
             transition: 0.3s;
+            min-height: 40px;
         }
         .btn-tambah { background: var(--success); }
         .btn-update { background: var(--primary); }
         .btn-batal { background: #7f8c8d; }
         .btn-import { background: #9b59b6; }
         .btn-import:hover { background: #8e44ad; }
-        .btn-edit { background: var(--warning); padding: 4px 10px; margin-right: 5px; }
+        .btn-edit { background: var(--warning); padding: clamp(4px, 1vw, 6px) clamp(8px, 1.5vw, 10px); margin-right: 5px; font-size: clamp(10px, 1.5vw, 11px); }
         .btn-edit:hover { background: #e67e22; }
-        .btn-hapus { background: var(--danger); padding: 4px 10px; }
+        .btn-hapus { background: var(--danger); padding: clamp(4px, 1vw, 6px) clamp(8px, 1.5vw, 10px); font-size: clamp(10px, 1.5vw, 11px); }
         .btn-hapus:hover { background: #c0392b; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
-        th { background: #f8f9fa; color: #555; text-align: left; padding: 12px 10px; border: 1px solid #dee2e6; }
-        td { padding: 10px; border: 1px solid #dee2e6; vertical-align: middle; }
+        table { width: 100%; border-collapse: collapse; margin-top: clamp(8px, 2vw, 10px); font-size: clamp(11px, 2vw, 13px); overflow-x: auto; }
+        th { background: #f8f9fa; color: #555; text-align: left; padding: clamp(8px, 1.5vw, 12px) clamp(6px, 1.5vw, 10px); border: 1px solid #dee2e6; font-size: clamp(11px, 2vw, 13px); }
+        td { padding: clamp(8px, 1.5vw, 10px) clamp(6px, 1.5vw, 10px); border: 1px solid #dee2e6; vertical-align: middle; font-size: clamp(11px, 1.5vw, 12px); }
         tr:nth-child(even) { background-color: #fcfcfc; }
         
         .text-center { text-align: center; }
         .uppercase { text-transform: uppercase; }
-        .filter-label { font-weight: bold; color: #004085; font-size: 14px; }
+        .filter-label { font-weight: bold; color: #004085; font-size: clamp(12px, 3vw, 14px); }
     </style>
 </head>
 <body>

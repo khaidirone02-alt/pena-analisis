@@ -22,20 +22,22 @@
             --border-color: #ddd;
         }
 
-        body { font-family: 'Segoe UI', sans-serif; background-color: #eaeff2; margin: 0; padding: 20px; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #eaeff2; margin: 0; padding: clamp(10px, 3vw, 20px); }
         
         .container { 
             max-width: 1100px; 
             margin: 0 auto; 
             background: white; 
-            padding: 25px; 
+            padding: clamp(15px, 4vw, 25px); 
             border-radius: 8px; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
         }
 
-        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn-group { display: flex; gap: 10px; }
-        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; transition: 0.3s; }
+        .header-flex { display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; margin-bottom: clamp(15px, 4vw, 20px); gap: 15px; flex-wrap: wrap; }
+        h2 { margin: 0; flex: 1 1 auto; min-width: 200px; }
+        .btn-group { display: flex; gap: clamp(8px, 2vw, 10px); flex-wrap: wrap; }
+        .btn { padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px); border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: clamp(11px, 2vw, 13px); transition: 0.3s; white-space: nowrap; }
         .btn-edit { background: var(--danger); color: white; }
         .btn-save { background: var(--success); color: white; }
         .btn-logout { background: #34495e; color: white; }
@@ -50,18 +52,18 @@
             border-left: 5px solid #ffeeba; 
         }
 
-        .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .main-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: clamp(20px, 5vw, 40px); }
         .section-header { 
             color: var(--primary-blue); 
-            font-size: 14px; 
+            font-size: clamp(12px, 3vw, 14px); 
             font-weight: bold; 
-            margin-bottom: 20px; 
+            margin-bottom: clamp(15px, 4vw, 20px); 
             border-bottom: 2px solid var(--gray-light);
             padding-bottom: 8px;
         }
 
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 11px; font-weight: 700; color: #555; margin-bottom: 6px; text-transform: uppercase; }
+        .form-group { margin-bottom: clamp(12px, 3vw, 15px); }
+        label { display: block; font-size: clamp(10px, 2.5vw, 12px); font-weight: 700; color: #555; margin-bottom: clamp(5px, 1vw, 6px); text-transform: uppercase; }
         
         /* Tooltip/Info Tag Style */
         .info-tag {
@@ -98,20 +100,21 @@
 
         input, select { 
             width: 100%; 
-            padding: 10px; 
+            padding: clamp(10px, 2.5vw, 12px); 
             border: 1px solid var(--border-color); 
             border-radius: 4px; 
-            font-size: 13px; 
+            font-size: clamp(12px, 2.5vw, 14px); 
             background: #fff;
+            min-height: 44px;
         }
         input:disabled, select:disabled { background-color: #f1f3f5; color: #666; cursor: not-allowed; }
 
-        .kelas-list { border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; background: #fafafa; max-height: 250px; overflow-y: auto; }
-        .kelas-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
-        .kelas-row input { flex: 1; padding: 5px 8px; }
-        .btn-small { padding: 5px 10px; font-size: 10px; color: white; border-radius: 3px; border: none; cursor: pointer; }
+        .kelas-list { border: 1px solid var(--border-color); border-radius: 4px; padding: clamp(8px, 2vw, 10px); background: #fafafa; max-height: 250px; overflow-y: auto; }
+        .kelas-row { display: flex; gap: clamp(6px, 1.5vw, 8px); margin-bottom: clamp(6px, 1.5vw, 8px); align-items: center; }
+        .kelas-row input { flex: 1; padding: clamp(8px, 1.5vw, 10px); font-size: clamp(12px, 2vw, 13px); }
+        .btn-small { padding: clamp(8px, 1.5vw, 10px) clamp(10px, 2vw, 12px); font-size: clamp(10px, 2vw, 11px); color: white; border-radius: 3px; border: none; cursor: pointer; min-height: 36px; }
         .btn-del { background: var(--danger); }
-        .btn-add { background: var(--success); width: 100%; margin-top: 10px; padding: 8px; }
+        .btn-add { background: var(--success); width: 100%; margin-top: clamp(8px, 2vw, 10px); padding: clamp(10px, 2vw, 12px); font-size: clamp(11px, 2vw, 13px); }
         
         #penilaian_kelas_aktif { border: 2px solid var(--primary-blue); font-weight: bold; color: var(--primary-blue); }
         #penilaian_tp { background: #fffde7; border: 1px solid #fbc02d; }

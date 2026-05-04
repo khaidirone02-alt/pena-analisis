@@ -15,68 +15,69 @@
 
     <style>
         :root { --primary-blue: #3498db; --border-color: #dee2e6; }
-        body { font-family: 'Segoe UI', sans-serif; background: white; margin: 0; padding: 20px; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: white; margin: 0; padding: clamp(10px, 3vw, 20px); }
         
-        h2 { font-size: 18px; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
+        h2 { font-size: clamp(16px, 4vw, 18px); color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: clamp(8px, 2vw, 10px); margin-top: 0; margin-bottom: clamp(10px, 2vw, 15px); }
 
         /* --- BAGIAN STICKY (FREEZE) --- */
         .sticky-container {
-            position: -webkit-sticky; /* Dukungan Safari */
+            position: -webkit-sticky;
             position: sticky;
             top: 0;
             background: white;
             z-index: 1000;
-            padding-bottom: 15px;
+            padding-bottom: clamp(10px, 2vw, 15px);
             border-bottom: 3px solid var(--primary-blue);
-            margin-bottom: 10px;
+            margin-bottom: clamp(8px, 2vw, 10px);
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
 
-        .section-box { margin-top: 10px; }
-        label { font-size: 11px; font-weight: bold; color: #3498db; display: block; margin-bottom: 5px; text-transform: uppercase; }
+        .section-box { margin-top: clamp(8px, 2vw, 10px); }
+        label { font-size: clamp(10px, 2.5vw, 12px); font-weight: bold; color: #3498db; display: block; margin-bottom: clamp(4px, 1vw, 5px); text-transform: uppercase; }
 
         .grid-jawaban {
-            display: flex; flex-wrap: wrap; gap: 4px; background: #fdfdfd;
-            padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+            display: flex; flex-wrap: wrap; gap: clamp(2px, 1vw, 4px); background: #fdfdfd;
+            padding: clamp(8px, 2vw, 10px); border: 1px solid #ddd; border-radius: 4px; justify-content: center;
         }
 
         .item-soal { 
             display: flex; flex-direction: column; align-items: center; 
-            width: 30px; 
-            margin-bottom: 8px;
+            width: clamp(26px, 5vw, 30px);
+            margin-bottom: clamp(6px, 1.5vw, 8px);
         }
 
         .nomor-soal { 
-            font-size: 9px; color: #888; margin-bottom: 2px; font-weight: bold; 
+            font-size: clamp(8px, 2vw, 9px); color: #888; margin-bottom: clamp(1px, 0.5vw, 2px); font-weight: bold; 
         }
 
         .box-input {
-            width: 25px; height: 25px; text-align: center; border: 1px solid #ccc;
+            width: clamp(22px, 4vw, 25px); height: clamp(22px, 4vw, 25px); text-align: center; border: 1px solid #ccc;
             border-radius: 3px; font-weight: bold; text-transform: uppercase;
-            font-size: 13px;
+            font-size: clamp(11px, 2vw, 13px); min-height: 32px; min-width: 32px;
         }
 
         .box-input:focus { border-color: var(--primary-blue); background: #e8f4fd; outline: none; }
 
         table { 
-            width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; 
+            width: 100%; border-collapse: collapse; margin-top: clamp(8px, 2vw, 10px); font-size: clamp(11px, 2vw, 13px); 
         }
         
-        /* Membuat Header Tabel juga ikut Sticky agar tetap terlihat No/Nama */
         thead th { 
             position: sticky; 
-            top: 135px; /* Menyesuaikan tinggi kontainer kunci di atasnya */
+            top: clamp(100px, 20vw, 140px);
             background: #f8f9fa; 
             z-index: 900; 
-            padding: 12px 10px; 
+            padding: clamp(8px, 1.5vw, 12px) clamp(6px, 1vw, 10px); 
             border: 1px solid var(--border-color);
+            font-size: clamp(10px, 2vw, 12px);
         }
 
-        td { padding: 12px 10px; border: 1px solid var(--border-color); }
+        td { padding: clamp(8px, 1.5vw, 12px) clamp(6px, 1vw, 10px); border: 1px solid var(--border-color); }
         
-        .no-col { text-align: center; width: 40px; }
-        .nama-col { width: 200px; font-weight: bold; text-transform: uppercase; }
-        .status-save { font-size: 10px; color: #27ae60; margin-left: 10px; display: none; }
+        .no-col { text-align: center; width: clamp(25px, 5vw, 40px); }
+        .nama-col { width: clamp(120px, 50vw, 200px); font-weight: bold; text-transform: uppercase; }
+        .status-save { font-size: clamp(10px, 2vw, 11px); color: #27ae60; margin-left: clamp(8px, 1.5vw, 10px); display: none; }
 
         /* Mobile Responsive Styles */
         @media (max-width: 768px) {

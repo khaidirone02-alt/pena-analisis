@@ -20,44 +20,49 @@
             --danger-text: #e74c3c;
         }
 
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: white; margin: 0; padding: 20px; color: #333; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: white; margin: 0; padding: clamp(10px, 3vw, 20px); color: #333; }
         
         .header-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            padding-bottom: clamp(8px, 2vw, 10px);
+            margin-bottom: clamp(15px, 3vw, 20px);
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
-        h2 { font-size: 18px; color: #2c3e50; margin: 0; text-transform: uppercase; }
+        h2 { font-size: clamp(16px, 4vw, 18px); color: #2c3e50; margin: 0; text-transform: uppercase; }
 
         .stats-summary {
             display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: clamp(10px, 2vw, 15px);
+            margin-bottom: clamp(15px, 3vw, 20px);
+            flex-wrap: wrap;
         }
 
         .stat-card {
             background: #f8f9fa;
-            padding: 10px 15px;
+            padding: clamp(10px, 2vw, 15px);
             border-radius: 6px;
             border: 1px solid var(--border-color);
-            font-size: 12px;
+            font-size: clamp(11px, 2vw, 13px);
         }
 
         .badge-kelas {
             background: var(--primary-blue);
             color: white;
-            padding: 2px 8px;
+            padding: clamp(2px, 0.5vw, 4px) clamp(6px, 1.5vw, 8px);
             border-radius: 4px;
-            margin-left: 10px;
+            margin-left: clamp(8px, 1.5vw, 10px);
+            font-size: clamp(10px, 2vw, 12px);
         }
 
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background: #f8f9fa; color: #555; padding: 12px 10px; border: 1px solid var(--border-color); text-align: center; }
-        td { padding: 10px; border: 1px solid var(--border-color); vertical-align: middle; }
+        table { width: 100%; border-collapse: collapse; font-size: clamp(11px, 2vw, 13px); overflow-x: auto; }
+        th { background: #f8f9fa; color: #555; padding: clamp(8px, 1.5vw, 12px) clamp(8px, 1.5vw, 10px); border: 1px solid var(--border-color); text-align: center; font-size: clamp(11px, 2vw, 13px); }
+        td { padding: clamp(8px, 1.5vw, 10px); border: 1px solid var(--border-color); vertical-align: middle; }
         
         .text-center { text-align: center; }
         .text-left { text-align: left; }
@@ -65,13 +70,13 @@
         .uppercase { text-transform: uppercase; }
 
         .status-badge {
-            padding: 6px 12px;
+            padding: clamp(5px, 1.5vw, 8px) clamp(10px, 2vw, 12px);
             border-radius: 4px;
             font-weight: bold;
-            font-size: 10px;
+            font-size: clamp(10px, 1.5vw, 11px);
             display: inline-block;
             text-align: center;
-            min-width: 85px;
+            min-width: 75px;
         }
         .lulus { background: var(--success-bg); color: var(--success-text); }
         .remedial { background: var(--danger-bg); color: var(--danger-text); }

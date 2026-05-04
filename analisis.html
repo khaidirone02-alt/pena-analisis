@@ -16,23 +16,26 @@
             --border-color: #dee2e6;
         }
 
-        body { font-family: 'Segoe UI', sans-serif; background: white; margin: 0; padding: 20px; color: #333; }
-        h2 { font-size: 18px; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 10px; text-transform: uppercase; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: white; margin: 0; padding: clamp(10px, 3vw, 20px); color: #333; }
+        h2 { font-size: clamp(16px, 4vw, 18px); color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: clamp(8px, 2vw, 10px); margin-bottom: clamp(10px, 2vw, 15px); text-transform: uppercase; }
 
         .info-header {
             background: #e7f3fe;
-            padding: 10px;
+            padding: clamp(8px, 2vw, 10px);
             border-radius: 4px;
-            margin-bottom: 20px;
-            font-size: 13px;
+            margin-bottom: clamp(15px, 3vw, 20px);
+            font-size: clamp(12px, 2.5vw, 13px);
             color: #31708f;
             display: flex;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
-        th { background: #f8f9fa; color: #333; padding: 12px 8px; border: 1px solid var(--border-color); text-align: center; }
-        td { padding: 10px 8px; border: 1px solid var(--border-color); text-align: center; }
+        table { width: 100%; border-collapse: collapse; font-size: clamp(11px, 2vw, 13px); margin-top: clamp(8px, 2vw, 10px); overflow-x: auto; }
+        th { background: #f8f9fa; color: #333; padding: clamp(8px, 1.5vw, 12px) clamp(6px, 1vw, 8px); border: 1px solid var(--border-color); text-align: center; font-size: clamp(11px, 2vw, 13px); }
+        td { padding: clamp(8px, 1.5vw, 10px) clamp(6px, 1vw, 8px); border: 1px solid var(--border-color); text-align: center; }
         
         .header-group { background: #f1f3f5; font-weight: bold; }
         tr:nth-child(even) { background-color: #fcfcfc; }

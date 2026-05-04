@@ -262,6 +262,7 @@
             color: #7f8c8d;
         }
 
+        @page { size: legal portrait; margin: 12mm; }
         @media print {
             body {
                 background: white;
@@ -650,7 +651,7 @@
 
             try {
                 const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdf = new jsPDF({ unit: 'mm', format: 'legal' });
                 const pageWidth = pdf.internal.pageSize.getWidth();
                 const pageHeight = pdf.internal.pageSize.getHeight();
 

@@ -230,23 +230,16 @@
             return;
         }
 
-        // HANYA untuk siswa: navigasi vertikal antar siswa
+        // Navigasi vertikal dalam grid (atas/bawah pindah dalam kolom yang sama)
         if (key === 'ArrowDown') {
             event.preventDefault();
-            // Navigasi dalam kolom isian yang sama (vertikal)
-            let nextIndex = index + 1;
-            
-            if (tipe === 'master') {
-                // Master: navigasi dalam 50 soal master
+            const gridContainer = el.closest('.grid-jawaban');
+            if (gridContainer) {
+                const colsPerRow = hitungKolomPerBaris(gridContainer);
+                const nextIndex = index + colsPerRow;
+                
                 if (nextIndex <= JUMLAH_SOAL) {
-                    const nextId = `m_${nextIndex}`;
-                    const nextEl = document.getElementById(nextId);
-                    if (nextEl) nextEl.focus();
-                }
-            } else if (tipe === 'siswa') {
-                // Siswa: navigasi dalam 50 soal siswa yang sama
-                if (nextIndex <= JUMLAH_SOAL) {
-                    const nextId = `s_${keySiswa}_${nextIndex}`;
+                    const nextId = tipe === 'master' ? `m_${nextIndex}` : `s_${keySiswa}_${nextIndex}`;
                     const nextEl = document.getElementById(nextId);
                     if (nextEl) nextEl.focus();
                 }
@@ -256,20 +249,13 @@
 
         if (key === 'ArrowUp') {
             event.preventDefault();
-            // Navigasi dalam kolom isian yang sama (vertikal)
-            let prevIndex = index - 1;
-            
-            if (tipe === 'master') {
-                // Master: navigasi dalam 50 soal master
+            const gridContainer = el.closest('.grid-jawaban');
+            if (gridContainer) {
+                const colsPerRow = hitungKolomPerBaris(gridContainer);
+                const prevIndex = index - colsPerRow;
+                
                 if (prevIndex >= 1) {
-                    const prevId = `m_${prevIndex}`;
-                    const prevEl = document.getElementById(prevId);
-                    if (prevEl) prevEl.focus();
-                }
-            } else if (tipe === 'siswa') {
-                // Siswa: navigasi dalam 50 soal siswa yang sama
-                if (prevIndex >= 1) {
-                    const prevId = `s_${keySiswa}_${prevIndex}`;
+                    const prevId = tipe === 'master' ? `m_${prevIndex}` : `s_${keySiswa}_${prevIndex}`;
                     const prevEl = document.getElementById(prevId);
                     if (prevEl) prevEl.focus();
                 }
@@ -289,6 +275,26 @@
                 }
             }
         }
+    }
+
+    function hitungKolomPerBaris(container) {
+        // Hitung jumlah kolom berdasarkan posisi Y elemen
+        const items = container.querySelectorAll('.item-soal');
+        if (items.length < 2) return 1;
+        
+        const firstItemY = items[0].getBoundingClientRect().top;
+        let colsPerRow = 1;
+        
+        for (let i = 1; i < items.length; i++) {
+            const itemY = items[i].getBoundingClientRect().top;
+            if (Math.abs(itemY - firstItemY) < 5) { // Toleransi 5px untuk keselarasan
+                colsPerRow++;
+            } else {
+                break; // Sudah ke baris berikutnya
+            }
+        }
+        
+        return colsPerRow;
     }
 
     function saveMaster() {

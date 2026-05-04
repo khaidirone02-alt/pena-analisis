@@ -243,17 +243,27 @@
                 <value>Sistem manajemen analisis penilaian siswa untuk guru dan sekolah</value>
             </div>
         </div>
-        <button class="edit-about-btn" onclick="window.parent.editAboutInfo()">✏️ Edit Info Profil</button>
+        <button class="edit-about-btn" id="edit-about-btn" style="display:none;" onclick="window.parent.editAboutInfo()">✏️ Edit Info Profil</button>
     </div>
 
-    <div class="bottom-spacer"></div>
+    <div class="about-section" id="developer-panel" style="display:none;">
+        <h2>🛠️ Developer Panel</h2>
+        <div class="about-content">
+            <div class="about-field">
+                <label>Status Mode</label>
+                <value id="dev-mode">Bukan Developer</value>
+            </div>
+            <div class="about-field">
+                <label>Total Akun</label>
+                <value id="dev-user-count">-</value>
+            </div>
+            <div class="about-field">
+                <label>Email Developer</label>
+                <value id="dev-email">-</value>
+            </div>
+        </div>
+    </div>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBq93zwNxWHkBs21i-58v0EhpztkaU3_W4",
-            authDomain: "analisis-app-d8d93.firebaseapp.com",
-            databaseURL: "https://analisis-app-d8d93-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "analisis-app-d8d93",
             storageBucket: "analisis-app-d8d93.firebasestorage.app",
             messagingSenderId: "1088329722308",
             appId: "1:1088329722308:web:70c80e5b59fc210bff1c91"
@@ -318,18 +328,34 @@
                 </div>
             `).join('');
 
-            // Load developer info dari database
             auth.onAuthStateChanged(user => {
                 if (user) {
-                    // Ambil developer uid
-                    db.ref('app_settings/developer_uid').once('value', snap => {
-                        const devUid = snap.val();
+                    db.ref('app_settings').once('value', snap => {
+                        const settings = snap.val() || {};
+                        const devUid = settings.developer_uid || '';
+                        const devEmail = settings.developer_email || '';
+
                         if (devUid) {
-                            // Load About Info dari developer
                             db.ref('users_data/' + devUid + '/about_info/nama_developer').on('value', snap => {
                                 const nama = snap.val() || 'PenaAnalisis Developer';
                                 document.getElementById('developer-name').textContent = nama;
                             });
+                        }
+
+                        const editButton = document.getElementById('edit-about-btn');
+                        const isDev = (user.uid === devUid);
+                        if (isDev) {
+                            const panel = document.getElementById('developer-panel');
+                            panel.style.display = 'block';
+                            document.getElementById('dev-mode').textContent = 'Developer Aktif';
+                            document.getElementById('dev-email').textContent = devEmail || user.email;
+                            editButton.style.display = 'inline-flex';
+
+                            db.ref('users_data').once('value', usersSnap => {
+                                document.getElementById('dev-user-count').textContent = usersSnap.numChildren();
+                            });
+                        } else {
+                            editButton.style.display = 'none';
                         }
                     });
                 }

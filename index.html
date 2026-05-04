@@ -269,6 +269,9 @@
         <p class="switch-auth" id="toggle-text">
             Belum memiliki akun? <b onclick="toggleAuthMode()">Daftar Disini</b>
         </p>
+        <p style="font-size:12px; color:#555; margin-top:12px; line-height:1.4;">
+            Gunakan akun developer khusus untuk memantau aplikasi dan mengedit About Me. Akun biasa hanya dapat menggunakan fitur utama.
+        </p>
     </div>
 </div>
 
@@ -291,6 +294,44 @@
     
     const auth = firebase.auth();
     const db = firebase.database();
+    const DEVELOPER_EMAIL = ""; // Isi jika ingin menetapkan akun developer khusus
+
+    async function ensureDeveloperAccount(user) {
+        if (!user || !user.email) return;
+
+        const appSettingsRef = db.ref('app_settings');
+        const snap = await appSettingsRef.once('value');
+        const settings = snap.val() || {};
+        const savedDevUid = settings.developer_uid || "";
+        const savedDevEmail = settings.developer_email || "";
+        const isMatchingEmail = savedDevEmail ? user.email === savedDevEmail : !DEVELOPER_EMAIL || user.email === DEVELOPER_EMAIL;
+
+        if (savedDevUid) {
+            if (savedDevUid === user.uid) {
+                await db.ref('users_data/' + user.uid + '/role').set('developer');
+            } else if (isMatchingEmail) {
+                await appSettingsRef.update({ developer_uid: user.uid, developer_email: user.email });
+                await db.ref('users_data/' + user.uid + '/role').set('developer');
+            }
+            return;
+        }
+
+        if (savedDevEmail && !isMatchingEmail) {
+            return;
+        }
+
+        const updateData = { developer_uid: user.uid };
+        if (savedDevEmail) {
+            updateData.developer_email = savedDevEmail;
+        } else if (DEVELOPER_EMAIL) {
+            updateData.developer_email = DEVELOPER_EMAIL;
+        } else {
+            updateData.developer_email = user.email;
+        }
+
+        await appSettingsRef.update(updateData);
+        await db.ref('users_data/' + user.uid + '/role').set('developer');
+    }
 
     const quotes = [
         "\"Pendidikan adalah senjata paling mematikan di dunia.\"",
@@ -422,7 +463,9 @@
         
         try {
             if(isLoginMode) {
-                await auth.signInWithEmailAndPassword(email, pass);
+                const userCredential = await auth.signInWithEmailAndPassword(email, pass);
+                const user = userCredential.user;
+                await ensureDeveloperAccount(user);
                 showToast("Berhasil Masuk! Selamat datang kembali.", "success");
             } else {
                 if(!displayName) return showToast("Nama Lengkap wajib diisi!", "error");
@@ -436,7 +479,7 @@
                     tp: "2025/2026",
                     kkm: 70
                 });
-
+                await ensureDeveloperAccount(user);
                 showToast("Akun berhasil dibuat! Selamat bergabung.", "success");
             }
         } catch (err) {

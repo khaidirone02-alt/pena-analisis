@@ -162,10 +162,9 @@
             </div>
 
             <div class="form-group">
-                <label style="color: var(--primary-blue);">
-                    Kelas Aktif (Tersaring per TP)
-                    <span class="info-tag">?</span>
-                </label>
+                <label>Nama Analisis</label>
+                <input type="text" id="penilaian_nama_analisis" class="lockable" disabled placeholder="Contoh: Analisis Sinkron, Analisis Remedial">
+            </div>
                 <select id="penilaian_kelas_aktif" class="lockable" disabled>
                     <option value="">Pilih Kelas...</option>
                 </select>
@@ -276,6 +275,7 @@
             document.getElementById('guru_pegid').value = val.pegid || "";
             document.getElementById('guru_mapel').value = val.mapel || "";
             document.getElementById('penilaian_kkm').value = val.kkm || "70";
+            document.getElementById('penilaian_nama_analisis').value = val.nama_analisis || "";
             document.getElementById('penilaian_semester').value = val.semester || "Ganjil";
 
             const wrapper = document.getElementById('wrapper-kelas');
@@ -366,6 +366,7 @@
             pegid: document.getElementById('guru_pegid').value,
             mapel: document.getElementById('guru_mapel').value,
             kkm: document.getElementById('penilaian_kkm').value,
+            nama_analisis: document.getElementById('penilaian_nama_analisis').value,
             semester: document.getElementById('penilaian_semester').value,
             list_kelas: arrayKelas
         });

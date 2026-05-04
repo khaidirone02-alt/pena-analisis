@@ -304,6 +304,10 @@
                         <span id="kkm">-</span>
                     </div>
                     <div class="field">
+                        <label>Nama Analisis:</label>
+                        <span id="nama-analisis">-</span>
+                    </div>
+                    <div class="field">
                         <label>Jumlah Soal:</label>
                         <span id="jumlah-soal">-</span>
                     </div>
@@ -439,17 +443,23 @@
 
         async function loadReportData() {
             try {
-                // Load profil sekolah
-                const profilRef = db.ref('users_data/' + currentUser.uid + '/profil_sekolah');
-                const profilSnap = await profilRef.once('value');
-                const profil = profilSnap.val();
-
-                if (profil) {
-                    document.getElementById('nama-guru').textContent = profil.nama_guru || '-';
-                    document.getElementById('mapel').textContent = profil.mapel || '-';
-                    document.getElementById('tp').textContent = profil.tp || '-';
-                    document.getElementById('kkm').textContent = profil.kkm || '-';
+                // Ambil data identitas dari tp aktif
+                const tpAktifRef = db.ref('users_data/' + currentUser.uid + '/pengaturan/tp_aktif');
+                const tpAktifSnap = await tpAktifRef.once('value');
+                const tpAktif = tpAktifSnap.val() || '';
+                let identitas = {};
+                if (tpAktif) {
+                    const tpPath = tpAktif.replace(/\//g, '_');
+                    const identitasRef = db.ref(`users_data/${currentUser.uid}/tahun_pelajaran/${tpPath}/identitas`);
+                    const identitasSnap = await identitasRef.once('value');
+                    identitas = identitasSnap.val() || {};
                 }
+
+                document.getElementById('nama-guru').textContent = identitas.nama_guru || '-';
+                document.getElementById('mapel').textContent = identitas.mapel || '-';
+                document.getElementById('tp').textContent = tpAktif || '-';
+                document.getElementById('kkm').textContent = identitas.kkm || '-';
+                document.getElementById('nama-analisis').textContent = identitas.nama_analisis || '-';
 
                 // Ambil nama sekolah dari identitas umum
                 const sekolahRef = db.ref('users_data/' + currentUser.uid + '/profil_sekolah_umum/sekolah');
@@ -481,19 +491,8 @@
                 document.getElementById('kepala-nip').textContent = nipKepala;
 
                 // Ambil data guru dari identitas aktif
-                let guruNamaFooter = profil.nama_guru || '-';
-                let guruIdFooter = '-';
-                const tpAktifRef = db.ref('users_data/' + currentUser.uid + '/pengaturan/tp_aktif');
-                const tpAktifSnap = await tpAktifRef.once('value');
-                const tpAktif = tpAktifSnap.val() || '';
-                if (tpAktif) {
-                    const tpPath = tpAktif.replace(/\//g, '_');
-                    const identitasRef = db.ref(`users_data/${currentUser.uid}/tahun_pelajaran/${tpPath}/identitas`);
-                    const identitasSnap = await identitasRef.once('value');
-                    const identitas = identitasSnap.val() || {};
-                    guruNamaFooter = identitas.nama_guru || guruNamaFooter;
-                    guruIdFooter = identitas.pegid || guruIdFooter;
-                }
+                let guruNamaFooter = identitas.nama_guru || '-';
+                let guruIdFooter = identitas.pegid || '-';
 
                 document.getElementById('nama-guru-footer').textContent = guruNamaFooter;
                 document.getElementById('id-guru-footer').textContent = guruIdFooter;

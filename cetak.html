@@ -459,7 +459,7 @@
                 document.getElementById('mapel').textContent = identitas.mapel || '-';
                 document.getElementById('tp').textContent = tpAktif || '-';
                 document.getElementById('kkm').textContent = identitas.kkm || '-';
-                document.getElementById('nama-analisis').textContent = identitas.nama_analisis || '-';
+                document.getElementById('nama-analisis').textContent = identitas.jenis_analisis || identitas.nama_analisis || '-';
 
                 // Ambil nama sekolah dari identitas umum
                 const sekolahRef = db.ref('users_data/' + currentUser.uid + '/profil_sekolah_umum/sekolah');

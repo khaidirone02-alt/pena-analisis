@@ -20,7 +20,7 @@
             font-family: 'Segoe UI', sans-serif;
             background: #f8f9fa;
             margin: 0;
-            padding: 2cm;
+            padding: 20px;
         }
 
         .container {
@@ -28,7 +28,7 @@
             width: 100%;
             margin: 0 auto;
             background: white;
-            padding: 2cm;
+            padding: 28px 24px;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.08);
         }
@@ -179,10 +179,6 @@
             border-radius: 8px;
             background: #f8f9fa;
             min-width: 220px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
         }
 
         .signature-title {
@@ -206,7 +202,7 @@
         }
 
         .signature-role {
-            margin-top: auto;
+            margin-top: 20px;
             font-size: 13px;
             color: #7f8c8d;
             text-align: center;
@@ -248,14 +244,13 @@
             body {
                 background: white;
                 padding: 0;
-                margin: 0;
             }
             .container {
                 box-shadow: none;
-                padding: 2cm;
+                padding: 16px;
                 max-width: 100%;
                 width: auto;
-                margin: 0;
+                margin: 0 auto;
             }
             .btn-container {
                 display: none;
@@ -267,47 +262,6 @@
             .footer-signature {
                 flex-wrap: wrap;
                 gap: 16px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 1cm;
-            }
-            .container {
-                padding: 1cm;
-                margin: 0;
-            }
-            .btn { 
-                padding: 10px 16px; 
-                font-size: 14px; 
-                width: 100%;
-                margin-bottom: 10px;
-            }
-            .btn-container {
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-            }
-            .identitas-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-            table { 
-                font-size: 12px; 
-            }
-            th, td { 
-                padding: 8px 6px; 
-            }
-            input, select { 
-                font-size: 16px; 
-                padding: 10px; 
-            }
-            .footer-signature {
-                flex-direction: column;
-            }
-            .signature-card {
-                width: 100%;
             }
         }
     </style>

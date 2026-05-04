@@ -190,6 +190,11 @@
                 <label>Nama Kabupaten/Kota</label>
                 <input type="text" id="sch_kab" class="lockable" disabled>
             </div>
+
+            <div class="form-group">
+                <label>Nama Desa</label>
+                <input type="text" id="sch_desa" class="lockable" disabled placeholder="Contoh: Desa Sukamaju">
+            </div>
             
             <div class="form-group">
                 <label>Provinsi</label>
@@ -256,6 +261,7 @@
             const val = snap.val() || {};
             document.getElementById('sch_nama').value = val.sekolah || "";
             document.getElementById('sch_kab').value = val.kabupaten || "";
+            document.getElementById('sch_desa').value = val.desa || "";
             document.getElementById('sch_prov').value = val.provinsi || "";
             document.getElementById('sch_kasek').value = val.kepala || "";
             document.getElementById('sch_nip').value = val.nip_kepala || "";
@@ -349,6 +355,7 @@
         db.ref(`users_data/${uid}/profil_sekolah_umum`).update({
             sekolah: document.getElementById('sch_nama').value,
             kabupaten: document.getElementById('sch_kab').value,
+            desa: document.getElementById('sch_desa').value,
             provinsi: document.getElementById('sch_prov').value,
             kepala: document.getElementById('sch_kasek').value,
             nip_kepala: document.getElementById('sch_nip').value

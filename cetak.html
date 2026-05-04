@@ -365,6 +365,20 @@
                 </div>
             </div>
 
+            <div class="section">
+                <h2>4. ALAMAT SURAT</h2>
+                <div class="identitas-grid">
+                    <div class="field">
+                        <label>Alamat Surat:</label>
+                        <span id="alamat-surat">-</span>
+                    </div>
+                    <div class="field">
+                        <label>Tanggal Cetak:</label>
+                        <span id="tanggal-cetak">-</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="footer-signature">
                 <div class="signature-card">
                     <div class="signature-title">Kepala Sekolah</div>
@@ -442,6 +456,20 @@
                 const sekolahSnap = await sekolahRef.once('value');
                 const namaSekolah = sekolahSnap.val() || '-';
                 document.getElementById('nama-sekolah').textContent = namaSekolah;
+
+                const alamatDesaRef = db.ref('users_data/' + currentUser.uid + '/profil_sekolah_umum/desa');
+                const alamatDesaSnap = await alamatDesaRef.once('value');
+                const namaDesa = alamatDesaSnap.val() || '';
+                const alamatKabRef = db.ref('users_data/' + currentUser.uid + '/profil_sekolah_umum/kabupaten');
+                const alamatKabSnap = await alamatKabRef.once('value');
+                const namaKab = alamatKabSnap.val() || '';
+                const alamatSurat = namaDesa ? `Desa ${namaDesa}, Kabupaten ${namaKab}` : namaKab ? `Kabupaten ${namaKab}` : '-';
+                document.getElementById('alamat-surat').textContent = alamatSurat;
+
+                const hariIni = new Date();
+                const namaBulan = hariIni.toLocaleString('id-ID', { month: 'long' });
+                const tanggalCetak = `${hariIni.getDate()} ${namaBulan} ${hariIni.getFullYear()}`;
+                document.getElementById('tanggal-cetak').textContent = tanggalCetak;
 
                 const kepalaRef = db.ref('users_data/' + currentUser.uid + '/profil_sekolah_umum/kepala');
                 const kepalaSnap = await kepalaRef.once('value');

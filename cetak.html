@@ -653,175 +653,38 @@
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 const pageWidth = pdf.internal.pageSize.getWidth();
                 const pageHeight = pdf.internal.pageSize.getHeight();
-                const margin = 20;
-                let yPosition = margin;
 
-                // Fungsi helper untuk menambah halaman baru
-                const addNewPage = () => {
+                const element = document.querySelector('.container');
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const imgProps = pdf.getImageProperties(imgData);
+                const pdfWidth = pageWidth;
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                let heightLeft = pdfHeight;
+                let position = 0;
+
+                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft > 0) {
+                    position -= pageHeight;
                     pdf.addPage();
-                    yPosition = margin;
-                };
+                    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+                    heightLeft -= pageHeight;
+                }
 
-                // Fungsi helper untuk menambah teks dengan auto line break
-                const addText = (text, fontSize = 12, fontWeight = 'normal', align = 'left') => {
-                    pdf.setFontSize(fontSize);
-                    pdf.setFont('helvetica', fontWeight);
-
-                    const lines = pdf.splitTextToSize(text, pageWidth - 2 * margin);
-                    const lineHeight = fontSize * 0.5;
-
-                    for (let i = 0; i < lines.length; i++) {
-                        if (yPosition + lineHeight > pageHeight - margin) {
-                            addNewPage();
-                        }
-
-                        let xPos = margin;
-                        if (align === 'center') {
-                            xPos = pageWidth / 2;
-                        } else if (align === 'right') {
-                            xPos = pageWidth - margin;
-                        }
-
-                        pdf.text(lines[i], xPos, yPosition, { align: align });
-                        yPosition += lineHeight;
-                    }
-                    yPosition += 2; // Spacing antar paragraf
-                };
-
-                // Header
-                pdf.setFont('helvetica', 'bold');
-                pdf.setFontSize(18);
-                pdf.text('LAPORAN ANALISIS PENILAIAN', pageWidth / 2, yPosition, { align: 'center' });
-                yPosition += 10;
-
-                pdf.setFontSize(12);
-                pdf.setFont('helvetica', 'normal');
-                const namaSekolah = document.getElementById('nama-sekolah').textContent;
-                pdf.text(namaSekolah, pageWidth / 2, yPosition, { align: 'center' });
-                yPosition += 6;
-
-                const tpHeader = document.getElementById('tp-header').textContent;
-                pdf.text(tpHeader, pageWidth / 2, yPosition, { align: 'center' });
-                yPosition += 15;
-
-                // 1. IDENTITAS PENILAIAN
-                addText('1. IDENTITAS PENILAIAN', 14, 'bold');
-                yPosition += 5;
-
-                const identitasData = [
-                    ['Nama Guru', document.getElementById('nama-guru').textContent],
-                    ['Mata Pelajaran', document.getElementById('mapel').textContent],
-                    ['Tahun Pelajaran', document.getElementById('tp').textContent],
-                    ['KKM', document.getElementById('kkm').textContent],
-                    ['Jenis Analisis', document.getElementById('nama-analisis').textContent],
-                    ['Jumlah Soal', document.getElementById('jumlah-soal').textContent],
-                    ['Jumlah Peserta', document.getElementById('jumlah-peserta').textContent]
-                ];
-
-                identitasData.forEach(([label, value]) => {
-                    if (yPosition + 8 > pageHeight - margin) addNewPage();
-                    pdf.setFont('helvetica', 'bold');
-                    pdf.text(`${label}:`, margin, yPosition);
-                    pdf.setFont('helvetica', 'normal');
-                    pdf.text(value || '-', margin + 40, yPosition);
-                    yPosition += 6;
-                });
-
-                yPosition += 10;
-
-                // 2. DAFTAR PESERTA DIDIK
-                addText('2. DAFTAR PESERTA DIDIK', 14, 'bold');
-                yPosition += 5;
-
-                // Header tabel
-                const tableHeaders = ['No', 'Nama Siswa', 'Kelas', 'Skor Mentah', 'Nilai Konversi', 'Status'];
-                const colWidths = [10, 50, 20, 25, 30, 25];
-                let xPos = margin;
-
-                pdf.setFont('helvetica', 'bold');
-                pdf.setFontSize(10);
-                tableHeaders.forEach((header, i) => {
-                    pdf.text(header, xPos, yPosition);
-                    xPos += colWidths[i];
-                });
-                yPosition += 5;
-
-                // Garis bawah header
-                pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-                yPosition += 3;
-
-                // Data tabel
-                pdf.setFont('helvetica', 'normal');
-                const tbody = document.getElementById('tbody-peserta');
-                const rows = tbody.querySelectorAll('tr');
-
-                rows.forEach(row => {
-                    if (yPosition + 8 > pageHeight - margin) addNewPage();
-
-                    const cells = row.querySelectorAll('td');
-                    xPos = margin;
-
-                    cells.forEach((cell, i) => {
-                        const text = cell.textContent.trim();
-                        pdf.text(text, xPos, yPosition);
-                        xPos += colWidths[i];
-                    });
-
-                    yPosition += 5;
-                });
-
-                yPosition += 10;
-
-                // 3. RINGKASAN HASIL ANALISIS
-                addText('3. RINGKASAN HASIL ANALISIS', 14, 'bold');
-                yPosition += 5;
-
-                const ringkasanData = [
-                    ['Rata-rata Kelas', document.getElementById('rata-rata').textContent],
-                    ['Nilai Tertinggi', document.getElementById('nilai-tertinggi').textContent],
-                    ['Nilai Terendah', document.getElementById('nilai-terendah').textContent],
-                    ['Jumlah Lulus', document.getElementById('jumlah-lulus').textContent],
-                    ['Jumlah Remedial', document.getElementById('jumlah-remedial').textContent],
-                    ['Persentase Kelulusan', document.getElementById('persentase-kelulusan').textContent]
-                ];
-
-                ringkasanData.forEach(([label, value]) => {
-                    if (yPosition + 8 > pageHeight - margin) addNewPage();
-                    pdf.setFont('helvetica', 'bold');
-                    pdf.text(`${label}:`, margin, yPosition);
-                    pdf.setFont('helvetica', 'normal');
-                    pdf.text(value || '-', margin + 40, yPosition);
-                    yPosition += 6;
-                });
-
-                yPosition += 10;
-
-                // 4. ALAMAT SURAT
-                addText('4. ALAMAT SURAT', 14, 'bold');
-                yPosition += 5;
-
-                const alamatData = [
-                    ['Alamat Surat', document.getElementById('alamat-surat').textContent],
-                    ['Tanggal Cetak', document.getElementById('tanggal-cetak').textContent]
-                ];
-
-                alamatData.forEach(([label, value]) => {
-                    if (yPosition + 8 > pageHeight - margin) addNewPage();
-                    pdf.setFont('helvetica', 'bold');
-                    pdf.text(`${label}:`, margin, yPosition);
-                    pdf.setFont('helvetica', 'normal');
-                    pdf.text(value || '-', margin + 40, yPosition);
-                    yPosition += 6;
-                });
-
-                // Simpan PDF
                 pdf.save('laporan-analisis-penilaian.pdf');
-                btnContainer.style.display = originalDisplay;
-
             } catch (error) {
                 console.error('Error generating PDF:', error);
-                btnContainer.style.display = originalDisplay;
                 alert('Terjadi kesalahan saat membuat PDF: ' + error.message);
+            } finally {
+                btnContainer.style.display = originalDisplay;
             }
         }
 

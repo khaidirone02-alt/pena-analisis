@@ -527,7 +527,7 @@
                 const konvRef = db.ref('users_data/' + currentUser.uid + '/konversi_pengaturan/nilai_tertinggi');
                 const konvSnap = await konvRef.once('value');
                 const nilaiMaxKonversi = parseInt(konvSnap.val()) || 100;
-                const kkm = parseInt(profil.kkm) || 70;
+                const kkm = parseInt(identitas.kkm) || 70;
 
                 // Ambil kelas aktif dari pengaturan
                 const kelasAktifRef = db.ref('users_data/' + currentUser.uid + '/pengaturan/kelas_aktif');

@@ -71,6 +71,10 @@
         .btn-batal { background: #7f8c8d; }
         .btn-import { background: #9b59b6; }
         .btn-import:hover { background: #8e44ad; }
+        .btn-edit { background: var(--warning); padding: 4px 10px; margin-right: 5px; }
+        .btn-edit:hover { background: #e67e22; }
+        .btn-hapus { background: var(--danger); padding: 4px 10px; }
+        .btn-hapus:hover { background: #c0392b; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
         th { background: #f8f9fa; color: #555; text-align: left; padding: 12px 10px; border: 1px solid #dee2e6; }
@@ -254,15 +258,30 @@
     function loadSiswa() {
         if(!kelasSekarang) return;
         
-        db.ref(`users_data/${uid}/peserta_didik`).orderByChild("kelas").equalTo(kelasSekarang)
-        .on('value', (snap) => {
+        db.ref(`users_data/${uid}/peserta_didik`).on('value', (snap) => {
             const tbody = document.getElementById('tabel-siswa');
             tbody.innerHTML = "";
             let no = 1;
             
+            // Kumpulkan semua siswa dari kelas yang dipilih
+            let siswaList = [];
             snap.forEach((child) => {
                 const s = child.val();
-                const key = child.key;
+                if(s.kelas === kelasSekarang) {
+                    siswaList.push({
+                        key: child.key,
+                        nama: s.nama,
+                        kelas: s.kelas,
+                        lp: s.lp
+                    });
+                }
+            });
+            
+            // Urutkan berdasarkan nama A-Z
+            siswaList.sort((a, b) => a.nama.localeCompare(b.nama));
+            
+            // Tampilkan siswa yang sudah diurutkan
+            siswaList.forEach(s => {
                 tbody.innerHTML += `
                     <tr>
                         <td class="text-center">${no++}</td>
@@ -270,13 +289,16 @@
                         <td class="text-center">${s.kelas}</td>
                         <td class="text-center">${s.lp}</td>
                         <td class="text-center">
-                            <button class="btn btn-edit" onclick="isiDataKeForm('${key}', '${s.nama}', '${s.lp}')">Edit</button>
-                            <button class="btn btn-hapus" onclick="hapusSiswa('${key}')">Hapus</button>
+                            <button class="btn btn-edit" onclick="isiDataKeForm('${s.key}', '${s.nama}', '${s.lp}')">Edit</button>
+                            <button class="btn btn-hapus" onclick="hapusSiswa('${s.key}')">Hapus</button>
                         </td>
                     </tr>
                 `;
             });
-            if(no === 1) tbody.innerHTML = `<tr><td colspan='5' class='text-center'>Belum ada data siswa di kelas ${kelasSekarang}.</td></tr>`;
+            
+            if(siswaList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan='5' class='text-center'>Belum ada data siswa di kelas ${kelasSekarang}.</td></tr>`;
+            }
         });
     }
 

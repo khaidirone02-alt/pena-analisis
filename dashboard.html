@@ -218,8 +218,44 @@
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            .sidebar { width: 100%; height: auto; }
-            .nav-menu { display: none; }
+            .sidebar { 
+                width: 100%; 
+                height: auto; 
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+            }
+            .sidebar.open { max-height: 500px; }
+            .nav-menu { display: block; }
+            
+            .mobile-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 15px 20px;
+                background: var(--sidebar-bg);
+                color: white;
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+            }
+            
+            .hamburger {
+                font-size: 24px;
+                cursor: pointer;
+                padding: 5px;
+                border-radius: 4px;
+                transition: 0.3s;
+            }
+            
+            .hamburger:hover { background: rgba(255,255,255,0.1); }
+            
+            .mobile-title {
+                font-size: 16px;
+                font-weight: bold;
+                text-align: center;
+                flex-grow: 1;
+            }
         }
     </style>
 </head>
@@ -238,6 +274,13 @@
     </div>
 
     <input type="file" id="logo-input" accept="image/*">
+
+    <!-- Mobile Header -->
+    <div class="mobile-header" style="display: none;">
+        <div class="hamburger" onclick="toggleSidebar()">☰</div>
+        <div class="mobile-title">PenaAnalisis</div>
+        <div style="width: 32px;"></div> <!-- Spacer untuk centering -->
+    </div>
 
     <div class="sidebar">
         <div class="sidebar-header">
@@ -362,7 +405,35 @@
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             element.classList.add('active');
             document.getElementById('content-frame').src = pageUrl;
+            
+            // Close sidebar on mobile after navigation
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
         }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Initialize mobile responsiveness
+        function initMobile() {
+            const mobileHeader = document.querySelector('.mobile-header');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (window.innerWidth <= 768) {
+                mobileHeader.style.display = 'flex';
+                sidebar.classList.remove('open'); // Start closed
+            } else {
+                mobileHeader.style.display = 'none';
+                sidebar.classList.remove('open'); // Ensure closed on desktop
+            }
+        }
+
+        // Initialize on load and resize
+        window.addEventListener('load', initMobile);
+        window.addEventListener('resize', initMobile);
     </script>
 </body>
 </html>

@@ -34,7 +34,13 @@
             gap: 10px;
         }
 
-        table { width: 100%; border-collapse: collapse; font-size: clamp(11px, 2vw, 13px); margin-top: clamp(8px, 2vw, 10px); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: clamp(11px, 2vw, 13px); margin-top: clamp(8px, 2vw, 10px); overflow-x: auto; margin-bottom: calc(90px + env(safe-area-inset-bottom, 20px)); }
+        
+        .bottom-spacer {
+            height: calc(90px + env(safe-area-inset-bottom, 20px));
+            width: 100%;
+        }
+        
         th { background: #f8f9fa; color: #333; padding: clamp(8px, 1.5vw, 12px) clamp(6px, 1vw, 8px); border: 1px solid var(--border-color); text-align: center; font-size: clamp(11px, 2vw, 13px); }
         td { padding: clamp(8px, 1.5vw, 10px) clamp(6px, 1vw, 8px); border: 1px solid var(--border-color); text-align: center; }
         
@@ -187,5 +193,6 @@
         isiTabel.innerHTML = htmlRows;
     }
 </script>
+<div class="bottom-spacer"></div>
 </body>
 </html>

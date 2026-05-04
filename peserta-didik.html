@@ -81,7 +81,13 @@
         .btn-hapus { background: var(--danger); padding: clamp(4px, 1vw, 6px) clamp(8px, 1.5vw, 10px); font-size: clamp(10px, 1.5vw, 11px); }
         .btn-hapus:hover { background: #c0392b; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: clamp(8px, 2vw, 10px); font-size: clamp(11px, 2vw, 13px); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: clamp(8px, 2vw, 10px); font-size: clamp(11px, 2vw, 13px); overflow-x: auto; margin-bottom: calc(90px + env(safe-area-inset-bottom, 20px)); }
+        
+        .bottom-spacer {
+            height: calc(90px + env(safe-area-inset-bottom, 20px));
+            width: 100%;
+        }
+        
         th { background: #f8f9fa; color: #555; text-align: left; padding: clamp(8px, 1.5vw, 12px) clamp(6px, 1.5vw, 10px); border: 1px solid #dee2e6; font-size: clamp(11px, 2vw, 13px); }
         td { padding: clamp(8px, 1.5vw, 10px) clamp(6px, 1.5vw, 10px); border: 1px solid #dee2e6; vertical-align: middle; font-size: clamp(11px, 1.5vw, 12px); }
         tr:nth-child(even) { background-color: #fcfcfc; }
@@ -430,5 +436,6 @@
         reader.readAsArrayBuffer(file);
     }
 </script>
+<div class="bottom-spacer"></div>
 </body>
 </html>

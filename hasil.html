@@ -61,7 +61,13 @@
             font-size: clamp(10px, 2vw, 12px);
         }
 
-        table { width: 100%; border-collapse: collapse; font-size: clamp(11px, 2vw, 13px); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: clamp(11px, 2vw, 13px); overflow-x: auto; margin-bottom: calc(90px + env(safe-area-inset-bottom, 20px)); }
+        
+        .bottom-spacer {
+            height: calc(90px + env(safe-area-inset-bottom, 20px));
+            width: 100%;
+        }
+        
         th { background: #f8f9fa; color: #555; padding: clamp(8px, 1.5vw, 12px) clamp(8px, 1.5vw, 10px); border: 1px solid var(--border-color); text-align: center; font-size: clamp(11px, 2vw, 13px); }
         td { padding: clamp(8px, 1.5vw, 10px); border: 1px solid var(--border-color); vertical-align: middle; }
         
@@ -229,5 +235,6 @@
         }
     }
 </script>
+<div class="bottom-spacer"></div>
 </body>
 </html>

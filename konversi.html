@@ -45,6 +45,12 @@
             max-width: 450px;
             width: 100%;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: calc(90px + env(safe-area-inset-bottom, 20px));
+        }
+
+        .bottom-spacer {
+            height: calc(90px + env(safe-area-inset-bottom, 20px));
+            width: 100%;
         }
 
         .form-group { margin-bottom: clamp(15px, 3vw, 20px); }
@@ -207,5 +213,6 @@
         }, 1000);
     }
 </script>
+<div class="bottom-spacer"></div>
 </body>
 </html>

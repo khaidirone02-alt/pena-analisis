@@ -9,6 +9,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
+    <!-- SheetJS untuk membaca Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
         :root {
@@ -66,8 +69,8 @@
         .btn-tambah { background: var(--success); }
         .btn-update { background: var(--primary); }
         .btn-batal { background: #7f8c8d; }
-        .btn-edit { background: var(--warning); padding: 4px 10px; margin-right: 5px; }
-        .btn-hapus { background: var(--danger); padding: 4px 10px; }
+        .btn-import { background: #9b59b6; }
+        .btn-import:hover { background: #8e44ad; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
         th { background: #f8f9fa; color: #555; text-align: left; padding: 12px 10px; border: 1px solid #dee2e6; }
@@ -112,6 +115,32 @@
             <button id="btn-submit" class="btn btn-tambah" onclick="simpanSiswa()">Tambah</button>
             <button id="btn-batal" class="btn btn-batal" onclick="resetForm()" style="display:none;">Batal</button>
         </div>
+    </div>
+
+    <!-- IMPORT DARI EXCEL -->
+    <div class="card">
+        <span class="card-title">Import dari Excel</span>
+        <div class="form-inline">
+            <div class="form-group">
+                <label>File Excel (.xlsx, .xls)</label>
+                <input type="file" id="excel_file" accept=".xlsx,.xls" style="width: 250px; padding: 5px;">
+            </div>
+            <div class="form-group">
+                <label>Sheet Name (opsional)</label>
+                <input type="text" id="sheet_name" placeholder="Sheet1" style="width: 100px;" value="Sheet1">
+            </div>
+            <div class="form-group">
+                <label>Default L/P</label>
+                <select id="default_lp">
+                    <option value="L">Laki-laki (L)</option>
+                    <option value="P">Perempuan (P)</option>
+                </select>
+            </div>
+            <button class="btn btn-import" onclick="importDariExcel()">Import Excel</button>
+        </div>
+        <small style="color: #666; margin-top: 10px; display: block;">
+            * Format Excel: Setiap sel berisi satu nama siswa. Kosongkan sel untuk mengakhiri pembacaan.
+        </small>
     </div>
 
     <table>
@@ -277,6 +306,101 @@
         if(confirm("Hapus data siswa ini?")) {
             db.ref(`users_data/${uid}/peserta_didik/${key}`).remove();
         }
+    }
+
+    // Fungsi Import dari Excel
+    async function importDariExcel() {
+        if(!kelasSekarang) {
+            alert("Pilih kelas di bagian atas terlebih dahulu!");
+            return;
+        }
+
+        const fileInput = document.getElementById('excel_file');
+        const sheetName = document.getElementById('sheet_name').value.trim() || 'Sheet1';
+        const defaultLp = document.getElementById('default_lp').value;
+
+        if(!fileInput.files[0]) {
+            alert("Pilih file Excel terlebih dahulu!");
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = async function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                
+                // Cek apakah sheet ada
+                if(!workbook.Sheets[sheetName]) {
+                    alert(`Sheet "${sheetName}" tidak ditemukan. Sheet yang tersedia: ${Object.keys(workbook.Sheets).join(', ')}`);
+                    return;
+                }
+
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ""});
+
+                if(jsonData.length === 0) {
+                    alert("File Excel kosong atau tidak valid!");
+                    return;
+                }
+
+                // Kumpulkan semua nama siswa dari sel yang tidak kosong
+                let namaSiswa = [];
+                jsonData.forEach(row => {
+                    row.forEach(cell => {
+                        const nama = cell.toString().trim();
+                        if(nama && nama !== "") {
+                            namaSiswa.push(nama.toUpperCase());
+                        }
+                    });
+                });
+
+                if(namaSiswa.length === 0) {
+                    alert("Tidak ada data nama siswa yang valid di file Excel!");
+                    return;
+                }
+
+                // Konfirmasi sebelum import
+                if(!confirm(`Import ${namaSiswa.length} siswa dari Excel?\n\nNama yang akan diimport:\n${namaSiswa.slice(0, 10).join(', ')}${namaSiswa.length > 10 ? '...' : ''}`)) {
+                    return;
+                }
+
+                // Import siswa satu per satu
+                let berhasil = 0;
+                let gagal = 0;
+
+                for(const nama of namaSiswa) {
+                    try {
+                        const dataSiswa = {
+                            nama: nama,
+                            kelas: kelasSekarang,
+                            lp: defaultLp
+                        };
+
+                        const newKey = db.ref().child(`users_data/${uid}/peserta_didik`).push().key;
+                        await db.ref(`users_data/${uid}/peserta_didik/${newKey}`).set(dataSiswa);
+                        berhasil++;
+                    } catch(error) {
+                        console.error('Error importing student:', nama, error);
+                        gagal++;
+                    }
+                }
+
+                // Reset form
+                fileInput.value = '';
+                
+                // Tampilkan hasil
+                alert(`Import selesai!\n✅ Berhasil: ${berhasil} siswa\n❌ Gagal: ${gagal} siswa`);
+
+            } catch(error) {
+                console.error('Error reading Excel file:', error);
+                alert('Error membaca file Excel: ' + error.message);
+            }
+        };
+
+        reader.readAsArrayBuffer(file);
     }
 </script>
 </body>

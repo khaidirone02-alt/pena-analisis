@@ -294,7 +294,7 @@
     
     const auth = firebase.auth();
     const db = firebase.database();
-    const DEVELOPER_EMAIL = ""; // Isi jika ingin menetapkan akun developer khusus
+    const DEVELOPER_EMAIL = "alikhaidir052@gmail.com"; // Isi jika ingin menetapkan akun developer khusus
 
     async function ensureDeveloperAccount(user) {
         if (!user || !user.email) return;
@@ -304,19 +304,20 @@
         const settings = snap.val() || {};
         const savedDevUid = settings.developer_uid || "";
         const savedDevEmail = settings.developer_email || "";
-        const isMatchingEmail = savedDevEmail ? user.email === savedDevEmail : !DEVELOPER_EMAIL || user.email === DEVELOPER_EMAIL;
+        const effectiveDevEmail = savedDevEmail || DEVELOPER_EMAIL || "";
+        const isDeveloperEmail = effectiveDevEmail ? user.email === effectiveDevEmail : true;
 
         if (savedDevUid) {
             if (savedDevUid === user.uid) {
                 await db.ref('users_data/' + user.uid + '/role').set('developer');
-            } else if (isMatchingEmail) {
-                await appSettingsRef.update({ developer_uid: user.uid, developer_email: user.email });
+            } else if (isDeveloperEmail) {
+                await appSettingsRef.update({ developer_uid: user.uid, developer_email: effectiveDevEmail });
                 await db.ref('users_data/' + user.uid + '/role').set('developer');
             }
             return;
         }
 
-        if (savedDevEmail && !isMatchingEmail) {
+        if (!isDeveloperEmail) {
             return;
         }
 

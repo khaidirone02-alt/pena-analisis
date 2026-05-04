@@ -108,6 +108,8 @@
     const db = firebase.database();
     let uid = "", kelasAktif = "", saveTimeout;
     const JUMLAH_SOAL = 50;
+    let siswaKeys = []; // Array untuk menyimpan urutan kunci siswa
+    let siswaData = {}; // Object untuk menyimpan data siswa dengan keySiswa sebagai key
 
     firebase.auth().onAuthStateChanged((user) => {
         if (user) {
@@ -152,11 +154,15 @@
         db.ref(`users_data/${uid}/peserta_didik`).orderByChild("kelas").equalTo(kelasAktif).once('value', (snap) => {
             const tbody = document.getElementById('tabel-input-jawaban');
             tbody.innerHTML = "";
+            siswaKeys = []; // Reset array siswa
+            siswaData = {}; // Reset object siswa
             let no = 1;
 
             snap.forEach((child) => {
                 const s = child.val();
                 const keySiswa = child.key;
+                siswaKeys.push(keySiswa); // Simpan urutan kunci siswa
+                siswaData[keySiswa] = { nama: s.nama, no: no }; // Simpan data siswa
                 const jwbArr = (s.jawaban || "").split("");
 
                 let gridSiswa = `<div class="grid-jawaban">`;
@@ -226,24 +232,30 @@
 
         if (key === 'ArrowDown') {
             event.preventDefault();
-            // Navigasi vertikal: pindah ke kolom berikutnya dalam baris yang sama
-            const nextIndex = index + 1;
-            if (nextIndex <= JUMLAH_SOAL) {
-                const nextId = tipe === 'master' ? `m_${nextIndex}` : `s_${keySiswa}_${nextIndex}`;
-                const nextEl = document.getElementById(nextId);
-                if (nextEl) nextEl.focus();
+            // Navigasi vertikal untuk siswa: pindah ke siswa berikutnya pada soal yang sama
+            if (tipe === 'siswa') {
+                const currentSiswaIndex = siswaKeys.indexOf(keySiswa);
+                if (currentSiswaIndex !== -1 && currentSiswaIndex < siswaKeys.length - 1) {
+                    const nextKeySiswa = siswaKeys[currentSiswaIndex + 1];
+                    const nextId = `s_${nextKeySiswa}_${index}`;
+                    const nextEl = document.getElementById(nextId);
+                    if (nextEl) nextEl.focus();
+                }
             }
             return;
         }
 
         if (key === 'ArrowUp') {
             event.preventDefault();
-            // Navigasi vertikal: pindah ke kolom sebelumnya dalam baris yang sama
-            const prevIndex = index - 1;
-            if (prevIndex >= 1) {
-                const prevId = tipe === 'master' ? `m_${prevIndex}` : `s_${keySiswa}_${prevIndex}`;
-                const prevEl = document.getElementById(prevId);
-                if (prevEl) prevEl.focus();
+            // Navigasi vertikal untuk siswa: pindah ke siswa sebelumnya pada soal yang sama
+            if (tipe === 'siswa') {
+                const currentSiswaIndex = siswaKeys.indexOf(keySiswa);
+                if (currentSiswaIndex > 0) {
+                    const prevKeySiswa = siswaKeys[currentSiswaIndex - 1];
+                    const prevId = `s_${prevKeySiswa}_${index}`;
+                    const prevEl = document.getElementById(prevId);
+                    if (prevEl) prevEl.focus();
+                }
             }
             return;
         }

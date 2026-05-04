@@ -23,7 +23,8 @@
         }
 
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #eaeff2; margin: 0; padding: clamp(10px, 3vw, 20px); }
+        html { min-height: 100%; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #eaeff2; margin: 0; padding: calc(clamp(10px, 3vw, 20px) + env(safe-area-inset-bottom, 20px)); }
         
         .container { 
             max-width: 1100px; 

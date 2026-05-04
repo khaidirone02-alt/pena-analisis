@@ -19,11 +19,12 @@
         }
 
         * { box-sizing: border-box; }
+        html { min-height: 100%; }
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background: #fff; 
             margin: 0; 
-            padding: clamp(10px, 3vw, 20px); 
+            padding: calc(clamp(10px, 3vw, 20px) + env(safe-area-inset-bottom, 20px)); 
             color: var(--text-dark);
         }
 

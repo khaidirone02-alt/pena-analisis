@@ -21,7 +21,8 @@
         }
 
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: white; margin: 0; padding: clamp(10px, 3vw, 20px); color: #333; }
+        html { min-height: 100%; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: white; margin: 0; padding: calc(clamp(10px, 3vw, 20px) + env(safe-area-inset-bottom, 20px)); color: #333; }
         
         .header-container {
             display: flex;

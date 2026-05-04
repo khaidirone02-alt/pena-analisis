@@ -262,14 +262,28 @@
     </div>
 
     <div class="about-section">
-        <h2>📝 Deskripsi Developer</h2>
-        <div class="about-content">
-            <div class="about-field" style="grid-column: 1 / -1;">
-                <value id="developer-bio">Memuat informasi developer...</value>
-            </div>
+    <h2>👤 Ringkasan About Me</h2>
+    <div class="about-content">
+        <div class="about-field">
+            <label>Nama / Institusi</label>
+            <value id="developer-summary-name">Memuat...</value>
         </div>
-        <button class="edit-about-btn" id="edit-about-btn" style="display:none;" onclick="window.parent.editAboutInfo()">✏️ Edit Info Profil</button>
+        <div class="about-field">
+            <label>Bidang</label>
+            <value id="developer-summary-field">-</value>
+        </div>
+        <div class="about-field">
+            <label>Lokasi</label>
+            <value id="developer-summary-location">-</value>
+        </div>
+        <div class="about-field" style="grid-column: 1 / -1;">
+            <label>Bio Singkat</label>
+            <value id="developer-summary-bio">Memuat informasi developer...</value>
+        </div>
     </div>
+</div>
+
+<div class="about-section">
 
     <div class="about-section" id="developer-panel" style="display:none;">
         <h2>🛠️ Developer Panel</h2>
@@ -387,13 +401,18 @@
                         if (devUid) {
                             db.ref('users_data/' + devUid + '/about_info').on('value', snap => {
                                 const data = snap.val() || {};
+                                const bioText = data.biografi || 'Sistem manajemen analisis penilaian siswa untuk guru dan sekolah';
                                 document.getElementById('developer-name').textContent = data.nama_developer || 'PenaAnalisis Developer';
                                 document.getElementById('developer-email').textContent = data.email_kontak || '-';
                                 document.getElementById('developer-phone').textContent = data.telepon_kontak || '-';
                                 document.getElementById('developer-field').textContent = data.bidang_kerja || '-';
                                 document.getElementById('developer-location').textContent = data.lokasi_kerja || '-';
                                 document.getElementById('developer-exp').textContent = data.tahun_pengalaman ? data.tahun_pengalaman + ' tahun' : '-';
-                                document.getElementById('developer-bio').textContent = data.biografi || 'Sistem manajemen analisis penilaian siswa untuk guru dan sekolah';
+                                document.getElementById('developer-bio').textContent = bioText;
+                                document.getElementById('developer-summary-name').textContent = data.nama_developer || 'PenaAnalisis Developer';
+                                document.getElementById('developer-summary-field').textContent = data.bidang_kerja || '-';
+                                document.getElementById('developer-summary-location').textContent = data.lokasi_kerja || '-';
+                                document.getElementById('developer-summary-bio').textContent = bioText.length > 180 ? bioText.slice(0, 180) + '...' : bioText;
                             });
                         }
 

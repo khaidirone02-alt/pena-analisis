@@ -286,6 +286,27 @@
                 flex-wrap: wrap;
                 gap: 16px;
             }
+            table {
+                width: 100%;
+                table-layout: auto;
+                font-size: 11px;
+            }
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            thead {
+                display: table-header-group;
+            }
+            tfoot {
+                display: table-footer-group;
+            }
+            .section {
+                page-break-inside: avoid;
+            }
+            .footer-signature {
+                page-break-inside: avoid;
+            }
         }
     </style>
 </head>
@@ -651,13 +672,13 @@
 
             try {
                 const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({ unit: 'mm', format: 'legal' });
+                const pdf = new jsPDF({ unit: 'mm', format: 'legal', orientation: 'portrait' });
                 const pageWidth = pdf.internal.pageSize.getWidth();
                 const pageHeight = pdf.internal.pageSize.getHeight();
 
                 const element = document.querySelector('.container');
                 const canvas = await html2canvas(element, {
-                    scale: 2,
+                    scale: 3,
                     useCORS: true,
                     backgroundColor: '#ffffff',
                     logging: false

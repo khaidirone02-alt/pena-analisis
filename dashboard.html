@@ -217,6 +217,7 @@
             overflow: auto;
             -webkit-overflow-scrolling: touch;
             position: relative;
+            padding-bottom: calc(140px + env(safe-area-inset-bottom, 20px));
         }
 
         #content-frame {
@@ -224,6 +225,7 @@
             height: 100%;
             min-height: 100vh;
             border: none;
+            display: block;
         }
 
         #logo-input { display: none; }
@@ -320,7 +322,7 @@
     </div>
 
     <div class="main-content">
-        <iframe src="Identitas Penilaian.html" id="content-frame"></iframe>
+        <iframe src="Identitas Penilaian.html" id="content-frame" scrolling="yes"></iframe>
     </div>
 
     <script>

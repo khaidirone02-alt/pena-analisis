@@ -318,12 +318,19 @@
                 </div>
             `).join('');
 
-            // Load developer name from Firebase
+            // Load developer info dari database
             auth.onAuthStateChanged(user => {
                 if (user) {
-                    db.ref(`users_data/${user.uid}/pengaturan/nama_guru`).on('value', snap => {
-                        const nama = snap.val() || 'Guru PenaAnalisis';
-                        document.getElementById('developer-name').textContent = nama;
+                    // Ambil developer uid
+                    db.ref('app_settings/developer_uid').once('value', snap => {
+                        const devUid = snap.val();
+                        if (devUid) {
+                            // Load About Info dari developer
+                            db.ref('users_data/' + devUid + '/about_info/nama_developer').on('value', snap => {
+                                const nama = snap.val() || 'PenaAnalisis Developer';
+                                document.getElementById('developer-name').textContent = nama;
+                            });
+                        }
                     });
                 }
             });

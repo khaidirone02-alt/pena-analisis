@@ -143,6 +143,14 @@
 
     <h2>ℹ️ Tentang Saya (Developer Info)</h2>
 
+    <div class="info-box" id="edit-permission-box" style="display:none;">
+        ✅ Anda adalah developer. Anda bisa mengedit informasi profil ini.
+    </div>
+
+    <div class="info-box" id="view-only-box" style="display:none;">
+        👁️ Anda hanya bisa melihat informasi ini. Hanya developer yang bisa mengeditnya.
+    </div>
+
     <div class="info-box">
         💡 Informasi ini akan ditampilkan di halaman utama dan Play Store. Isi dengan detail yang menarik tentang diri Anda atau institusi Anda.
     </div>
@@ -207,28 +215,77 @@
         const auth = firebase.auth();
 
         let currentUser = null;
+        let isDeveloper = false;
 
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUser = user;
+                checkIfDeveloper(user.uid);
                 loadAboutInfo();
             }
         });
 
+        function checkIfDeveloper(uid) {
+            // Ambil developer uid dari database
+            db.ref('app_settings/developer_uid').once('value', snap => {
+                const devUid = snap.val();
+                if (devUid) {
+                    isDeveloper = (uid === devUid);
+                } else {
+                    // Jika belum ada developer uid, set user pertama sebagai developer
+                    db.ref('app_settings/developer_uid').set(uid);
+                    isDeveloper = true;
+                }
+                updateUIPermission();
+            });
+        }
+
+        function updateUIPermission() {
+            const inputs = document.querySelectorAll('input, textarea');
+            const btnSimpan = document.querySelector('.btn-simpan');
+            const editBox = document.getElementById('edit-permission-box');
+            const viewOnlyBox = document.getElementById('view-only-box');
+
+            if (isDeveloper) {
+                // Developer - bisa edit
+                inputs.forEach(el => el.disabled = false);
+                btnSimpan.style.display = 'block';
+                editBox.style.display = 'block';
+                viewOnlyBox.style.display = 'none';
+            } else {
+                // Bukan developer - read-only
+                inputs.forEach(el => el.disabled = true);
+                btnSimpan.style.display = 'none';
+                editBox.style.display = 'none';
+                viewOnlyBox.style.display = 'block';
+            }
+        }
+
         function loadAboutInfo() {
-            db.ref(`users_data/${currentUser.uid}/about_info`).on('value', snap => {
-                const data = snap.val() || {};
-                document.getElementById('nama_developer').value = data.nama_developer || '';
-                document.getElementById('email_kontak').value = data.email_kontak || '';
-                document.getElementById('telepon_kontak').value = data.telepon_kontak || '';
-                document.getElementById('bidang_kerja').value = data.bidang_kerja || '';
-                document.getElementById('tahun_pengalaman').value = data.tahun_pengalaman || '';
-                document.getElementById('lokasi_kerja').value = data.lokasi_kerja || '';
-                document.getElementById('biografi').value = data.biografi || '';
+            // Load About Info dari developer, bukan dari currentUser
+            db.ref('app_settings/developer_uid').once('value', snap => {
+                const devUid = snap.val();
+                if (devUid) {
+                    db.ref(`users_data/${devUid}/about_info`).on('value', snap => {
+                        const data = snap.val() || {};
+                        document.getElementById('nama_developer').value = data.nama_developer || '';
+                        document.getElementById('email_kontak').value = data.email_kontak || '';
+                        document.getElementById('telepon_kontak').value = data.telepon_kontak || '';
+                        document.getElementById('bidang_kerja').value = data.bidang_kerja || '';
+                        document.getElementById('tahun_pengalaman').value = data.tahun_pengalaman || '';
+                        document.getElementById('lokasi_kerja').value = data.lokasi_kerja || '';
+                        document.getElementById('biografi').value = data.biografi || '';
+                    });
+                }
             });
         }
 
         function simpanAboutInfo() {
+            if (!isDeveloper) {
+                Swal.fire('Akses Ditolak', 'Hanya developer yang bisa mengedit informasi ini', 'error');
+                return;
+            }
+
             const aboutData = {
                 nama_developer: document.getElementById('nama_developer').value.trim(),
                 email_kontak: document.getElementById('email_kontak').value.trim(),
@@ -251,7 +308,7 @@
                 didOpen: () => Swal.showLoading()
             });
 
-            db.ref(`users_data/${currentUser.uid}/about_info`).set(aboutData).then(() => {
+            db.ref('users_data/' + currentUser.uid + '/about_info').set(aboutData).then(() => {
                 Swal.fire('Berhasil', 'Informasi profil Anda telah disimpan', 'success');
                 setTimeout(() => kembaliKeDashboard(), 1500);
             }).catch(err => {

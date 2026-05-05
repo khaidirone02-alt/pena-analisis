@@ -483,6 +483,13 @@
             const loading = document.getElementById('frame-loading');
             if (!frame) return;
 
+            // Jika halaman yang sama dipilih lagi, hindari reload yang membuat terasa lambat
+            const currentPage = (frame.getAttribute('src') || '').split('?')[0];
+            if (currentPage === pageUrl) {
+                closeSidebar();
+                return;
+            }
+
             if (loading) loading.classList.add('show');
             frame.classList.add('is-switching');
 
@@ -493,14 +500,16 @@
             };
 
             frame.addEventListener('load', handleFrameLoaded);
+            frame.src = pageUrl;
+
+            // Fallback jika event load terlambat/terlewat pada beberapa browser mobile
             setTimeout(() => {
-                frame.src = pageUrl;
-            }, 160);
+                frame.classList.remove('is-switching');
+                if (loading) loading.classList.remove('show');
+            }, 1200);
             
-            // Close sidebar on mobile after navigation
-            if (window.innerWidth <= 768) {
-                toggleSidebar();
-            }
+            // Di mobile: selalu tutup sidebar setelah memilih menu
+            closeSidebar();
         }
 
         function editAboutInfo() {
@@ -510,6 +519,13 @@
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
             sidebar.classList.toggle('open');
+        }
+
+        function closeSidebar() {
+            if (window.innerWidth <= 768) {
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar) sidebar.classList.remove('open');
+            }
         }
 
         // Initialize mobile responsiveness

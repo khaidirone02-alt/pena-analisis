@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#3498db">
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon.png?v=2">
+    <link rel="apple-touch-icon" href="icon.png?v=3">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <title>Login - PenaAnalisis</title>
@@ -47,13 +47,15 @@
         }
 
         .splash-logo {
-            width: 40vw;
-            max-width: 250px;
-            min-width: 150px;
+            width: min(72vw, 360px);
+            max-width: 360px;
+            min-width: 180px;
             height: auto;
-            margin-bottom: 25px;
+            margin-bottom: 18px;
             animation: pulse 2s infinite;
             filter: drop-shadow(0 8px 20px rgba(0,0,0,0.25));
+            object-fit: contain;
+            border-radius: 14px;
         }
 
         .brand-name {
@@ -316,7 +318,7 @@
 <div id="splash-screen">
     <div class="splash-glow one"></div>
     <div class="splash-glow two"></div>
-    <img src="logo-aplikasi.png?v=2" class="splash-logo" alt="Logo">
+    <img src="splash.png?v=1" class="splash-logo" alt="Splash PenaAnalisis">
     <h1 class="brand-name animate__animated animate__fadeInDown">PenaAnalisis</h1>
     <div id="quote" class="quote-text animate__animated animate__fadeInUp"></div>
     <div class="splash-progress animate__animated animate__fadeIn">

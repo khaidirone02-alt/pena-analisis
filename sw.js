@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pena-analisis-cache-v1';
+const CACHE_NAME = 'pena-analisis-cache-v2';
 const FILES_TO_CACHE = [
   '/',
   '/index.html',
@@ -12,7 +12,9 @@ const FILES_TO_CACHE = [
   '/hasil.html',
   '/cetak.html',
   '/about-info.html',
-  '/logo.svg',
+  '/icon.png',
+  '/logo-aplikasi.png',
+  '/profile.jpeg',
   '/manifest.json'
 ];
 

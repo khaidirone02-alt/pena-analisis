@@ -1,0 +1,21 @@
+{
+  "rules": {
+    "users_data": {
+      ".read": "auth != null && root.child('app_settings/developer_uid').val() == auth.uid",
+      "$uid": {
+        ".read": "$uid == auth.uid",
+        ".write": "$uid == auth.uid",
+        "about_info": {
+          ".read": "auth != null"
+        },
+        "ringkasan_aplikasi": {
+          ".read": "auth != null"
+        }
+      }
+    },
+    "app_settings": {
+      ".read": "auth != null",
+      ".write": "auth != null && (!data.exists() || !data.child('developer_uid').exists() || data.child('developer_uid').val() == auth.uid)"
+    }
+  }
+}

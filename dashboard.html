@@ -226,6 +226,51 @@
             min-height: 100vh;
             border: none;
             display: block;
+            opacity: 1;
+            transition: opacity 0.28s ease;
+        }
+
+        #content-frame.is-switching {
+            opacity: 0;
+        }
+
+        .frame-loading {
+            position: absolute;
+            inset: 0;
+            background: rgba(234, 239, 242, 0.86);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 5;
+        }
+
+        .frame-loading.show {
+            opacity: 1;
+        }
+
+        .frame-loading-dot {
+            width: 12px;
+            height: 12px;
+            margin: 0 5px;
+            border-radius: 50%;
+            background: #3498db;
+            animation: frameLoadingPulse 0.8s infinite ease-in-out;
+        }
+
+        .frame-loading-dot:nth-child(2) {
+            animation-delay: 0.12s;
+        }
+
+        .frame-loading-dot:nth-child(3) {
+            animation-delay: 0.24s;
+        }
+
+        @keyframes frameLoadingPulse {
+            0%, 80%, 100% { transform: scale(0.7); opacity: 0.55; }
+            40% { transform: scale(1); opacity: 1; }
         }
 
         #logo-input { display: none; }
@@ -317,13 +362,18 @@
             <div class="nav-item" onclick="loadPage('analisis.html', this)">5. Analisis Butir Soal</div>
             <div class="nav-item" onclick="loadPage('hasil.html', this)">6. Hasil Analisis Akhir</div>
             <div class="nav-item highlight" onclick="loadPage('cetak.html', this)">7. Cetak Laporan</div>
-            <div id="about-menu-item" class="nav-item" onclick="loadPage('about-info.html', this)">ℹ️ Info aplikasi &amp; developer</div>
+            <div id="about-menu-item" class="nav-item" onclick="loadPage('about-info.html', this)">ℹ️ Info Aplikasi</div>
             
             <div class="nav-item logout-item" onclick="handleLogout()">🚪 KELUAR APLIKASI</div>
         </div>
     </div>
 
     <div class="main-content">
+        <div id="frame-loading" class="frame-loading">
+            <span class="frame-loading-dot"></span>
+            <span class="frame-loading-dot"></span>
+            <span class="frame-loading-dot"></span>
+        </div>
         <iframe src="dashboard-home.html" id="content-frame" scrolling="yes"></iframe>
     </div>
 
@@ -429,7 +479,23 @@
         function loadPage(pageUrl, element) {
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             if (element) element.classList.add('active');
-            document.getElementById('content-frame').src = pageUrl;
+            const frame = document.getElementById('content-frame');
+            const loading = document.getElementById('frame-loading');
+            if (!frame) return;
+
+            if (loading) loading.classList.add('show');
+            frame.classList.add('is-switching');
+
+            const handleFrameLoaded = () => {
+                frame.classList.remove('is-switching');
+                if (loading) loading.classList.remove('show');
+                frame.removeEventListener('load', handleFrameLoaded);
+            };
+
+            frame.addEventListener('load', handleFrameLoaded);
+            setTimeout(() => {
+                frame.src = pageUrl;
+            }, 160);
             
             // Close sidebar on mobile after navigation
             if (window.innerWidth <= 768) {

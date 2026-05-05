@@ -38,6 +38,7 @@
             border-radius: 12px;
             margin-bottom: clamp(25px, 5vw, 35px);
             box-shadow: 0 8px 16px rgba(52, 152, 219, 0.3);
+            animation: fadeUp 0.45s ease;
         }
 
         .welcome-section h1 {
@@ -74,6 +75,7 @@
             text-align: center;
             text-decoration: none;
             color: inherit;
+            animation: fadeUp 0.45s ease;
         }
 
         .menu-card:hover {
@@ -110,6 +112,7 @@
             padding: clamp(20px, 3vw, 30px);
             margin-bottom: clamp(30px, 5vw, 40px);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            animation: fadeUp 0.45s ease;
         }
 
         .about-section h2 {
@@ -196,6 +199,17 @@
             opacity: 0.95;
         }
 
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .bottom-spacer {
             height: calc(100px + env(safe-area-inset-bottom, 20px));
             width: 100%;
@@ -215,8 +229,8 @@
 <body>
 
     <div class="welcome-section">
-        <h1>Selamat Datang! 👋</h1>
-        <p id="welcome-tagline">Kelola data penilaian siswa dengan mudah dan profesional.</p>
+        <h1>Selamat Datang</h1>
+        <p id="welcome-tagline">Kelola data penilaian dengan rapi, cepat, dan profesional.</p>
     </div>
 
     <div class="menu-grid" id="menu-grid">
@@ -224,8 +238,8 @@
     </div>
 
     <div class="about-section">
-        <h2>ℹ️ Ringkasan Aplikasi</h2>
-        <p style="margin:0 0 16px; font-size:13px; color:#7f8c8d;">Diisi oleh akun developer; sama untuk semua pengguna.</p>
+        <h2>Ringkasan Aplikasi</h2>
+        <p style="margin:0 0 16px; font-size:13px; color:#7f8c8d;">Informasi umum aplikasi yang ditampilkan untuk semua pengguna.</p>
         <div class="about-content">
             <div class="about-field">
                 <label>Nama Aplikasi</label>
@@ -247,11 +261,11 @@
     </div>
 
     <div class="about-section">
-        <h2>👤 Tentang Developer (About Me)</h2>
-        <p style="margin:0 0 16px; font-size:13px; color:#7f8c8d;">Profil developer; ditampilkan ke semua pengguna yang login.</p>
+        <h2>Informasi Pengelola Aplikasi</h2>
+        <p style="margin:0 0 16px; font-size:13px; color:#7f8c8d;">Kontak resmi pengelola aplikasi untuk kebutuhan komunikasi.</p>
         <div class="about-content">
             <div class="about-field">
-                <label>Nama / Institusi</label>
+                <label>Nama / Instansi</label>
                 <value id="developer-summary-name">Memuat...</value>
             </div>
             <div class="about-field">
@@ -259,11 +273,11 @@
                 <value id="developer-email">-</value>
             </div>
             <div class="about-field">
-                <label>Telepon / WA</label>
+                <label>Telepon / WhatsApp</label>
                 <value id="developer-phone">-</value>
             </div>
             <div class="about-field">
-                <label>Bidang</label>
+                <label>Bidang Tugas</label>
                 <value id="developer-summary-field">-</value>
             </div>
             <div class="about-field">
@@ -275,31 +289,11 @@
                 <value id="developer-exp">-</value>
             </div>
             <div class="about-field" style="grid-column: 1 / -1;">
-                <label>Bio</label>
+                <label>Keterangan</label>
                 <value id="developer-summary-bio">Memuat informasi developer...</value>
             </div>
         </div>
-        <button type="button" id="edit-about-btn" class="edit-about-btn" style="display:none;" onclick="window.parent.loadPage('about-info.html', null)">✏️ Edit ringkasan aplikasi &amp; profil developer</button>
-    </div>
-
-<div class="about-section">
-
-    <div class="about-section" id="developer-panel" style="display:none;">
-        <h2>🛠️ Developer Panel</h2>
-        <div class="about-content">
-            <div class="about-field">
-                <label>Status Mode</label>
-                <value id="dev-mode">Bukan Developer</value>
-            </div>
-            <div class="about-field">
-                <label>Total Akun</label>
-                <value id="dev-user-count">-</value>
-            </div>
-            <div class="about-field">
-                <label>Email Developer</label>
-                <value id="dev-email">-</value>
-            </div>
-        </div>
+        <button type="button" id="edit-about-btn" class="edit-about-btn" style="display:none;" onclick="window.parent.loadPage('about-info.html', null)">Edit informasi aplikasi</button>
     </div>
 
     <script>
@@ -421,8 +415,8 @@
                             const r = ring || {};
                             const namaApp = r.nama_aplikasi || 'PenaAnalisis';
                             const versi = r.versi || '1.0.0';
-                            const tagline = (r.tagline || '').trim() || 'Kelola data penilaian siswa dengan mudah dan profesional.';
-                            const deskripsi = (r.deskripsi_aplikasi || '').trim() || 'Aplikasi analisis penilaian untuk guru dan sekolah. Ringkasan ini dapat disesuaikan oleh developer di menu Info.';
+                            const tagline = (r.tagline || '').trim() || 'Kelola data penilaian dengan rapi, cepat, dan profesional.';
+                            const deskripsi = (r.deskripsi_aplikasi || '').trim() || 'Aplikasi analisis penilaian untuk kebutuhan guru dan sekolah.';
                             document.getElementById('ringkasan-app-nama').textContent = namaApp;
                             document.getElementById('ringkasan-app-versi').textContent = versi;
                             document.getElementById('ringkasan-app-tagline').textContent = tagline;
@@ -466,7 +460,7 @@
                                 document.getElementById('developer-exp').textContent = data.tahun_pengalaman ? data.tahun_pengalaman + ' tahun' : '-';
                                 document.getElementById('developer-summary-bio').textContent = bioText
                                     ? (bioText.length > 400 ? bioText.slice(0, 400) + '…' : bioText)
-                                    : 'Developer belum mengisi bio.';
+                                    : 'Informasi pengelola belum diisi.';
                             };
                             aboutRef.on('value', handler);
                             aboutUnsub = () => aboutRef.off('value', handler);
@@ -477,26 +471,12 @@
                             document.getElementById('developer-summary-field').textContent = '-';
                             document.getElementById('developer-summary-location').textContent = '-';
                             document.getElementById('developer-exp').textContent = '-';
-                            document.getElementById('developer-summary-bio').textContent = 'Profil developer belum diatur.';
+                            document.getElementById('developer-summary-bio').textContent = 'Informasi pengelola belum diatur.';
                         }
 
                         const editButton = document.getElementById('edit-about-btn');
                         const isDev = devUid && user.uid === devUid;
-                        if (isDev) {
-                            const panel = document.getElementById('developer-panel');
-                            panel.style.display = 'block';
-                            document.getElementById('dev-mode').textContent = 'Developer Aktif';
-                            document.getElementById('dev-email').textContent = devEmail || user.email;
-                            if (editButton) editButton.style.display = 'inline-flex';
-
-                            db.ref('users_data').once('value', usersSnap => {
-                                document.getElementById('dev-user-count').textContent = usersSnap.numChildren();
-                            });
-                        } else {
-                            const panel = document.getElementById('developer-panel');
-                            if (panel) panel.style.display = 'none';
-                            if (editButton) editButton.style.display = 'none';
-                        }
+                        if (editButton) editButton.style.display = isDev ? 'inline-flex' : 'none';
                 };
 
                 appSettingsRef.on('value', onAppSettings);

@@ -212,33 +212,36 @@
         .footer-signature {
             display: flex;
             justify-content: center;
-            gap: clamp(15px, 3vw, 20px);
+            gap: clamp(12px, 2.2vw, 18px);
             margin-top: clamp(30px, 5vw, 40px);
             flex-wrap: wrap;
             align-items: stretch;
         }
 
         .signature-card {
-            flex: 1 1 300px;
-            max-width: 340px;
-            padding: 18px;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            background: #f8f9fa;
-            min-width: 220px;
+            flex: 1 1 250px;
+            max-width: 310px;
+            padding: 16px 14px;
+            border: 1px solid #e6ebf0;
+            border-radius: 12px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            min-width: 210px;
             text-align: center;
+            box-shadow: 0 2px 8px rgba(30, 60, 90, 0.06);
         }
 
         .signature-title {
             font-weight: 700;
             color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 13px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
         }
 
         .signature-space {
-            height: 78px; /* ruang tanda tangan */
-            margin: 10px 0 12px;
+            height: 65px;
+            margin: 8px 0 10px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -247,45 +250,46 @@
         .signature-space::after{
             content: "";
             width: 85%;
-            border-bottom: 1px dashed #cbd3da;
+            border-bottom: 1px dashed #b8c7d6;
         }
 
         .signature-name {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             color: #34495e;
             margin-bottom: 2px;
         }
 
         .signature-id {
-            font-size: 14px;
+            font-size: 13px;
             color: #5d6d7e;
-            margin-bottom: 14px;
+            margin-bottom: 8px;
         }
 
         .barcode-card {
-            flex: 1 1 240px;
+            flex: 1 1 250px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 18px;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            background: #ffffff;
-            min-width: 240px;
+            padding: 16px 14px;
+            border: 1px solid #e6ebf0;
+            border-radius: 12px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            min-width: 210px;
+            box-shadow: 0 2px 8px rgba(30, 60, 90, 0.06);
         }
 
         .barcode-card svg {
             width: 100%;
             height: auto;
-            max-height: 90px;
-            margin-bottom: 10px;
+            max-height: 76px;
+            margin-bottom: 8px;
         }
 
         .barcode-label {
             color: #7f8c8d;
-            font-size: 12px;
+            font-size: 11px;
             text-align: center;
         }
 
@@ -325,8 +329,13 @@
                 justify-content: center;
             }
             .footer-signature {
-                flex-wrap: wrap;
-                gap: 16px;
+                flex-wrap: nowrap;
+                gap: 10px;
+                margin-top: 18px;
+                break-inside: avoid;
+                page-break-inside: avoid;
+                break-before: page;
+                page-break-before: always;
             }
             table {
                 width: 100%;
@@ -350,6 +359,11 @@
                 page-break-inside: avoid;
             }
             .footer-signature {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .signature-card,
+            .barcode-card {
                 break-inside: avoid;
                 page-break-inside: avoid;
             }

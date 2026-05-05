@@ -81,9 +81,11 @@
             width: 100%;
         }
         
+        .table-wrap { position: relative; }
+
         thead th { 
             position: sticky; 
-            top: clamp(100px, 20vw, 140px);
+            top: 0;
             background: #f8f9fa; 
             z-index: 900; 
             padding: clamp(8px, 1.5vw, 12px) clamp(6px, 1vw, 10px); 
@@ -134,7 +136,7 @@
             table { font-size: 12px; min-width: 680px; }
             
             thead th {
-                top: 120px; /* Adjust for mobile */
+                top: 0;
                 padding: 8px 6px;
                 font-size: 11px;
             }

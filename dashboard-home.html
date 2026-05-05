@@ -381,6 +381,7 @@
             `).join('');
 
             let aboutUnsub = null;
+            let ringkasanUnsub = null;
             let detachAppSettings = null;
 
             auth.onAuthStateChanged(user => {
@@ -391,6 +392,10 @@
                 if (aboutUnsub) {
                     aboutUnsub();
                     aboutUnsub = null;
+                }
+                if (ringkasanUnsub) {
+                    ringkasanUnsub();
+                    ringkasanUnsub = null;
                 }
                 if (!user) return;
 
@@ -410,18 +415,38 @@
                             db.ref('app_settings').update({ developer_uid: devUid, developer_email: emailFallback }).catch(() => {});
                         }
 
-                        const ring = settings.ringkasan_aplikasi || {};
-                        const namaApp = ring.nama_aplikasi || 'PenaAnalisis';
-                        const versi = ring.versi || '1.0.0';
-                        const tagline = (ring.tagline || '').trim() || 'Kelola data penilaian siswa dengan mudah dan profesional.';
-                        const deskripsi = (ring.deskripsi_aplikasi || '').trim() || 'Aplikasi analisis penilaian untuk guru dan sekolah. Ringkasan ini dapat disesuaikan oleh developer di menu Info.';
+                        const legacyRing = settings.ringkasan_aplikasi || {};
 
-                        document.getElementById('ringkasan-app-nama').textContent = namaApp;
-                        document.getElementById('ringkasan-app-versi').textContent = versi;
-                        document.getElementById('ringkasan-app-tagline').textContent = tagline;
-                        document.getElementById('ringkasan-app-deskripsi').textContent = deskripsi;
-                        const tagEl = document.getElementById('welcome-tagline');
-                        if (tagEl) tagEl.textContent = tagline;
+                        function applyRingToHome(ring) {
+                            const r = ring || {};
+                            const namaApp = r.nama_aplikasi || 'PenaAnalisis';
+                            const versi = r.versi || '1.0.0';
+                            const tagline = (r.tagline || '').trim() || 'Kelola data penilaian siswa dengan mudah dan profesional.';
+                            const deskripsi = (r.deskripsi_aplikasi || '').trim() || 'Aplikasi analisis penilaian untuk guru dan sekolah. Ringkasan ini dapat disesuaikan oleh developer di menu Info.';
+                            document.getElementById('ringkasan-app-nama').textContent = namaApp;
+                            document.getElementById('ringkasan-app-versi').textContent = versi;
+                            document.getElementById('ringkasan-app-tagline').textContent = tagline;
+                            document.getElementById('ringkasan-app-deskripsi').textContent = deskripsi;
+                            const tagEl = document.getElementById('welcome-tagline');
+                            if (tagEl) tagEl.textContent = tagline;
+                        }
+
+                        if (ringkasanUnsub) {
+                            ringkasanUnsub();
+                            ringkasanUnsub = null;
+                        }
+
+                        if (devUid) {
+                            const ringRef = db.ref('users_data/' + devUid + '/ringkasan_aplikasi');
+                            const onRing = ringSnap => {
+                                const nodeVal = ringSnap.val();
+                                applyRingToHome(Object.assign({}, legacyRing, nodeVal || {}));
+                            };
+                            ringRef.on('value', onRing);
+                            ringkasanUnsub = () => ringRef.off('value', onRing);
+                        } else {
+                            applyRingToHome(legacyRing);
+                        }
 
                         if (aboutUnsub) {
                             aboutUnsub();

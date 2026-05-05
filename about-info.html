@@ -241,6 +241,15 @@
         let isDeveloper = false;
         let detachAppSettings = null;
         let detachAboutInfo = null;
+        let detachRingkasan = null;
+
+        function fillRingkasanFields(r) {
+            const obj = r || {};
+            document.getElementById('app_nama_aplikasi').value = obj.nama_aplikasi || 'PenaAnalisis';
+            document.getElementById('app_versi').value = obj.versi || '1.0.0';
+            document.getElementById('app_tagline').value = obj.tagline || '';
+            document.getElementById('app_deskripsi_aplikasi').value = obj.deskripsi_aplikasi || '';
+        }
 
         auth.onAuthStateChanged(user => {
             if (detachAppSettings) {
@@ -250,6 +259,10 @@
             if (detachAboutInfo) {
                 detachAboutInfo();
                 detachAboutInfo = null;
+            }
+            if (detachRingkasan) {
+                detachRingkasan();
+                detachRingkasan = null;
             }
             if (!user) {
                 currentUser = null;
@@ -281,11 +294,23 @@
                 isDeveloper = !!devUid && user.uid === devUid;
                 updateUIPermission();
 
-                const r = settings.ringkasan_aplikasi || {};
-                document.getElementById('app_nama_aplikasi').value = r.nama_aplikasi || 'PenaAnalisis';
-                document.getElementById('app_versi').value = r.versi || '1.0.0';
-                document.getElementById('app_tagline').value = r.tagline || '';
-                document.getElementById('app_deskripsi_aplikasi').value = r.deskripsi_aplikasi || '';
+                if (detachRingkasan) {
+                    detachRingkasan();
+                    detachRingkasan = null;
+                }
+
+                const legacyRing = settings.ringkasan_aplikasi || {};
+                if (devUid) {
+                    const ringRef = db.ref(`users_data/${devUid}/ringkasan_aplikasi`);
+                    const onRing = ringSnap => {
+                        const dariNode = ringSnap.val();
+                        fillRingkasanFields(Object.assign({}, legacyRing, dariNode || {}));
+                    };
+                    ringRef.on('value', onRing);
+                    detachRingkasan = () => ringRef.off('value', onRing);
+                } else {
+                    fillRingkasanFields(legacyRing);
+                }
 
                 if (detachAboutInfo) {
                     detachAboutInfo();
@@ -392,7 +417,7 @@
                 }
 
                 Promise.all([
-                    db.ref('app_settings/ringkasan_aplikasi').set(ringkasanData),
+                    db.ref('users_data/' + devUid + '/ringkasan_aplikasi').set(ringkasanData),
                     db.ref('users_data/' + devUid + '/about_info').set(aboutData)
                 ]).then(() => {
                     Swal.fire('Berhasil', 'Ringkasan aplikasi dan profil developer telah disimpan.', 'success');

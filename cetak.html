@@ -317,9 +317,9 @@
                 margin: 0 auto;
             }
             .print-area {
-                max-width: none;
                 width: 100%;
-                margin: 0;
+                max-width: calc((var(--paper-width-mm) * 1mm) - (var(--page-margin-mm) * 2mm));
+                margin: 0 auto;
             }
             .btn-container {
                 display: none;

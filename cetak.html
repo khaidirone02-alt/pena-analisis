@@ -16,6 +16,11 @@
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
     <style>
+        :root {
+            --paper-width-mm: 216; /* Legal width */
+            --page-margin-mm: 10;
+        }
+
         * { box-sizing: border-box; }
         html {
             min-height: 100%;
@@ -42,7 +47,7 @@
         /* Area yang harus sama antara preview dan hasil cetak */
         .print-area {
             width: 100%;
-            max-width: 180mm; /* A4 (210mm) - margin 1.5cm kiri/kanan */
+            max-width: calc((var(--paper-width-mm) * 1mm) - (var(--page-margin-mm) * 2mm));
             margin: 0 auto;
         }
 
@@ -290,7 +295,7 @@
             color: #7f8c8d;
         }
 
-        @page { size: A4 portrait; margin: 15mm; } /* 1.5cm */
+        @page { size: legal portrait; margin: calc(var(--page-margin-mm) * 1mm); }
         @media print {
             * {
                 -webkit-print-color-adjust: exact;
@@ -308,8 +313,9 @@
                 margin: 0 auto;
             }
             .print-area {
-                max-width: 180mm;
-                margin: 0 auto;
+                max-width: none;
+                width: 100%;
+                margin: 0;
             }
             .btn-container {
                 display: none;
@@ -715,10 +721,10 @@
 
             try {
                 const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
+                const pdf = new jsPDF({ unit: 'mm', format: 'legal', orientation: 'portrait', compress: true });
                 const pageWidth = pdf.internal.pageSize.getWidth();
                 const pageHeight = pdf.internal.pageSize.getHeight();
-                const margin = 15; // 1.5cm
+                const margin = 10; // 1cm supaya konten lebih lega di kertas Legal/F4
                 const contentWidth = pageWidth - margin * 2;
                 const contentHeight = pageHeight - margin * 2;
 

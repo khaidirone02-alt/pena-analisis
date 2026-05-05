@@ -148,9 +148,11 @@
         const tbody = document.getElementById('tabel-hasil-akhir');
         
         try {
-            // 1. Ambil Kelas Aktif dari Menu 2
-            const snapKelas = await db.ref(`users_data/${uid}/pengaturan/kelas_aktif`).once('value');
-            const kelasAktif = snapKelas.val();
+            // 1. Kelas aktif + path TP (sama seperti Identitas Penilaian / cetak)
+            const snapPeng = await db.ref(`users_data/${uid}/pengaturan`).once('value');
+            const peng = snapPeng.val() || {};
+            const kelasAktif = peng.kelas_aktif;
+            const tpPath = peng.tp_path || (peng.tp_aktif ? String(peng.tp_aktif).replace(/\//g, '_') : '');
 
             if (!kelasAktif) {
                 tbody.innerHTML = `<tr><td colspan="6" class="text-center">Silakan pilih kelas di Menu 2 terlebih dahulu.</td></tr>`;
@@ -158,9 +160,25 @@
             }
             document.getElementById('label-kelas').innerText = "KELAS " + kelasAktif;
 
-            // 2. Ambil KKM (Menu 1)
-            const snapKkm = await db.ref(`users_data/${uid}/profil_sekolah/kkm`).once('value');
-            const kkm = parseInt(snapKkm.val()) || 70;
+            // 2. KKM dari identitas tahun pelajaran aktif (sinkron dengan Menu 1); fallback akun lama
+            const parseKkm = (v, fb) => {
+                const n = parseInt(v, 10);
+                return Number.isFinite(n) ? n : fb;
+            };
+            let kkm = 70;
+            if (tpPath) {
+                const snapIdentKkm = await db.ref(`users_data/${uid}/tahun_pelajaran/${tpPath}/identitas/kkm`).once('value');
+                const rawKkm = snapIdentKkm.val();
+                if (snapIdentKkm.exists() && rawKkm !== null && rawKkm !== '') {
+                    kkm = parseKkm(rawKkm, 70);
+                } else {
+                    const snapLegacy = await db.ref(`users_data/${uid}/profil_sekolah/kkm`).once('value');
+                    kkm = parseKkm(snapLegacy.val(), 70);
+                }
+            } else {
+                const snapLegacy = await db.ref(`users_data/${uid}/profil_sekolah/kkm`).once('value');
+                kkm = parseKkm(snapLegacy.val(), 70);
+            }
             document.getElementById('info-kkm').innerText = kkm;
 
             // 3. Ambil Kunci Jawaban (Menu 3) & Bersihkan "-"

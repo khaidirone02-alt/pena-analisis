@@ -216,7 +216,7 @@
 
     <div class="welcome-section">
         <h1>Selamat Datang! 👋</h1>
-        <p>Kelola data penilaian siswa dengan mudah dan profesional.</p>
+        <p id="welcome-tagline">Kelola data penilaian siswa dengan mudah dan profesional.</p>
     </div>
 
     <div class="menu-grid" id="menu-grid">
@@ -224,22 +224,38 @@
     </div>
 
     <div class="about-section">
-        <h2>ℹ️ Tentang Aplikasi</h2>
+        <h2>ℹ️ Ringkasan Aplikasi</h2>
+        <p style="margin:0 0 16px; font-size:13px; color:#7f8c8d;">Diisi oleh akun developer; sama untuk semua pengguna.</p>
         <div class="about-content">
             <div class="about-field">
                 <label>Nama Aplikasi</label>
-                <value>PenaAnalisis</value>
+                <value id="ringkasan-app-nama">PenaAnalisis</value>
             </div>
             <div class="about-field">
                 <label>Versi</label>
-                <value>1.0.0</value>
+                <value id="ringkasan-app-versi">1.0.0</value>
+            </div>
+            <div class="about-field" style="grid-column: 1 / -1;">
+                <label>Tagline</label>
+                <value id="ringkasan-app-tagline">—</value>
+            </div>
+            <div class="about-field" style="grid-column: 1 / -1;">
+                <label>Deskripsi aplikasi</label>
+                <value id="ringkasan-app-deskripsi">Memuat ringkasan aplikasi...</value>
+            </div>
+        </div>
+    </div>
+
+    <div class="about-section">
+        <h2>👤 Tentang Developer (About Me)</h2>
+        <p style="margin:0 0 16px; font-size:13px; color:#7f8c8d;">Profil developer; ditampilkan ke semua pengguna yang login.</p>
+        <div class="about-content">
+            <div class="about-field">
+                <label>Nama / Institusi</label>
+                <value id="developer-summary-name">Memuat...</value>
             </div>
             <div class="about-field">
-                <label>Pengembang</label>
-                <value id="developer-name">Memuat...</value>
-            </div>
-            <div class="about-field">
-                <label>Email Kontak</label>
+                <label>Email kontak</label>
                 <value id="developer-email">-</value>
             </div>
             <div class="about-field">
@@ -248,40 +264,23 @@
             </div>
             <div class="about-field">
                 <label>Bidang</label>
-                <value id="developer-field">-</value>
+                <value id="developer-summary-field">-</value>
             </div>
             <div class="about-field">
                 <label>Lokasi</label>
-                <value id="developer-location">-</value>
+                <value id="developer-summary-location">-</value>
             </div>
             <div class="about-field">
                 <label>Pengalaman</label>
                 <value id="developer-exp">-</value>
             </div>
+            <div class="about-field" style="grid-column: 1 / -1;">
+                <label>Bio</label>
+                <value id="developer-summary-bio">Memuat informasi developer...</value>
+            </div>
         </div>
+        <button type="button" id="edit-about-btn" class="edit-about-btn" style="display:none;" onclick="window.parent.loadPage('about-info.html', null)">✏️ Edit ringkasan aplikasi &amp; profil developer</button>
     </div>
-
-    <div class="about-section">
-    <h2>👤 Ringkasan About Me</h2>
-    <div class="about-content">
-        <div class="about-field">
-            <label>Nama / Institusi</label>
-            <value id="developer-summary-name">Memuat...</value>
-        </div>
-        <div class="about-field">
-            <label>Bidang</label>
-            <value id="developer-summary-field">-</value>
-        </div>
-        <div class="about-field">
-            <label>Lokasi</label>
-            <value id="developer-summary-location">-</value>
-        </div>
-        <div class="about-field" style="grid-column: 1 / -1;">
-            <label>Bio Singkat</label>
-            <value id="developer-summary-bio">Memuat informasi developer...</value>
-        </div>
-    </div>
-</div>
 
 <div class="about-section">
 
@@ -381,9 +380,22 @@
                 </div>
             `).join('');
 
+            let aboutUnsub = null;
+            let detachAppSettings = null;
+
             auth.onAuthStateChanged(user => {
-                if (user) {
-                    db.ref('app_settings').once('value', snap => {
+                if (detachAppSettings) {
+                    detachAppSettings();
+                    detachAppSettings = null;
+                }
+                if (aboutUnsub) {
+                    aboutUnsub();
+                    aboutUnsub = null;
+                }
+                if (!user) return;
+
+                const appSettingsRef = db.ref('app_settings');
+                const onAppSettings = snap => {
                         const settings = resolveSettings(snap.val());
                         let devUid = settings.developer_uid || '';
                         const devEmail = settings.developer_email || '';
@@ -398,22 +410,49 @@
                             db.ref('app_settings').update({ developer_uid: devUid, developer_email: emailFallback }).catch(() => {});
                         }
 
+                        const ring = settings.ringkasan_aplikasi || {};
+                        const namaApp = ring.nama_aplikasi || 'PenaAnalisis';
+                        const versi = ring.versi || '1.0.0';
+                        const tagline = (ring.tagline || '').trim() || 'Kelola data penilaian siswa dengan mudah dan profesional.';
+                        const deskripsi = (ring.deskripsi_aplikasi || '').trim() || 'Aplikasi analisis penilaian untuk guru dan sekolah. Ringkasan ini dapat disesuaikan oleh developer di menu Info.';
+
+                        document.getElementById('ringkasan-app-nama').textContent = namaApp;
+                        document.getElementById('ringkasan-app-versi').textContent = versi;
+                        document.getElementById('ringkasan-app-tagline').textContent = tagline;
+                        document.getElementById('ringkasan-app-deskripsi').textContent = deskripsi;
+                        const tagEl = document.getElementById('welcome-tagline');
+                        if (tagEl) tagEl.textContent = tagline;
+
+                        if (aboutUnsub) {
+                            aboutUnsub();
+                            aboutUnsub = null;
+                        }
+
                         if (devUid) {
-                            db.ref('users_data/' + devUid + '/about_info').on('value', snap => {
-                                const data = snap.val() || {};
-                                const bioText = data.biografi || 'Sistem manajemen analisis penilaian siswa untuk guru dan sekolah';
-                                document.getElementById('developer-name').textContent = data.nama_developer || 'PenaAnalisis Developer';
+                            const aboutRef = db.ref('users_data/' + devUid + '/about_info');
+                            const handler = aboutSnap => {
+                                const data = aboutSnap.val() || {};
+                                const bioText = data.biografi || '';
+                                document.getElementById('developer-summary-name').textContent = data.nama_developer || '—';
                                 document.getElementById('developer-email').textContent = data.email_kontak || '-';
                                 document.getElementById('developer-phone').textContent = data.telepon_kontak || '-';
-                                document.getElementById('developer-field').textContent = data.bidang_kerja || '-';
-                                document.getElementById('developer-location').textContent = data.lokasi_kerja || '-';
-                                document.getElementById('developer-exp').textContent = data.tahun_pengalaman ? data.tahun_pengalaman + ' tahun' : '-';
-                                document.getElementById('developer-bio').textContent = bioText;
-                                document.getElementById('developer-summary-name').textContent = data.nama_developer || 'PenaAnalisis Developer';
                                 document.getElementById('developer-summary-field').textContent = data.bidang_kerja || '-';
                                 document.getElementById('developer-summary-location').textContent = data.lokasi_kerja || '-';
-                                document.getElementById('developer-summary-bio').textContent = bioText.length > 180 ? bioText.slice(0, 180) + '...' : bioText;
-                            });
+                                document.getElementById('developer-exp').textContent = data.tahun_pengalaman ? data.tahun_pengalaman + ' tahun' : '-';
+                                document.getElementById('developer-summary-bio').textContent = bioText
+                                    ? (bioText.length > 400 ? bioText.slice(0, 400) + '…' : bioText)
+                                    : 'Developer belum mengisi bio.';
+                            };
+                            aboutRef.on('value', handler);
+                            aboutUnsub = () => aboutRef.off('value', handler);
+                        } else {
+                            document.getElementById('developer-summary-name').textContent = '—';
+                            document.getElementById('developer-email').textContent = '-';
+                            document.getElementById('developer-phone').textContent = '-';
+                            document.getElementById('developer-summary-field').textContent = '-';
+                            document.getElementById('developer-summary-location').textContent = '-';
+                            document.getElementById('developer-exp').textContent = '-';
+                            document.getElementById('developer-summary-bio').textContent = 'Profil developer belum diatur.';
                         }
 
                         const editButton = document.getElementById('edit-about-btn');
@@ -423,16 +462,20 @@
                             panel.style.display = 'block';
                             document.getElementById('dev-mode').textContent = 'Developer Aktif';
                             document.getElementById('dev-email').textContent = devEmail || user.email;
-                            editButton.style.display = 'inline-flex';
+                            if (editButton) editButton.style.display = 'inline-flex';
 
                             db.ref('users_data').once('value', usersSnap => {
                                 document.getElementById('dev-user-count').textContent = usersSnap.numChildren();
                             });
                         } else {
-                            editButton.style.display = 'none';
+                            const panel = document.getElementById('developer-panel');
+                            if (panel) panel.style.display = 'none';
+                            if (editButton) editButton.style.display = 'none';
                         }
-                    });
-                }
+                };
+
+                appSettingsRef.on('value', onAppSettings);
+                detachAppSettings = () => appSettingsRef.off('value', onAppSettings);
             });
         }
 

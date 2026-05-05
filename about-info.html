@@ -141,18 +141,41 @@
 </head>
 <body>
 
-    <h2>ℹ️ Tentang Saya (Developer Info)</h2>
-
     <div class="info-box" id="edit-permission-box" style="display:none;">
-        ✅ Anda adalah developer. Anda bisa mengedit informasi profil ini.
+        ✅ Anda adalah developer. Anda dapat mengedit ringkasan aplikasi dan profil developer di bawah ini.
     </div>
 
     <div class="info-box" id="view-only-box" style="display:none;">
-        👁️ Anda hanya bisa melihat informasi ini. Hanya developer yang bisa mengeditnya.
+        👁️ Tampilan hanya baca. Ringkasan aplikasi dan profil developer diatur oleh akun developer.
     </div>
 
+    <h2>📱 Ringkasan aplikasi (untuk semua pengguna)</h2>
     <div class="info-box">
-        💡 Informasi ini akan ditampilkan di halaman utama dan Play Store. Isi dengan detail yang menarik tentang diri Anda atau institusi Anda.
+        Bagian ini menjelaskan aplikasi secara umum (nama, versi, deskripsi). Isiannya <b>berbeda</b> dari profil developer di bawah, dan akan tampil sama di beranda bagi semua pengguna yang login.
+    </div>
+
+    <div class="form-grid">
+        <div class="form-group">
+            <label>Nama aplikasi</label>
+            <input type="text" id="app_nama_aplikasi" placeholder="Contoh: PenaAnalisis">
+        </div>
+        <div class="form-group">
+            <label>Versi</label>
+            <input type="text" id="app_versi" placeholder="Contoh: 1.0.0">
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+            <label>Tagline (satu kalimat)</label>
+            <input type="text" id="app_tagline" placeholder="Motto singkat aplikasi di beranda">
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+            <label>Deskripsi aplikasi</label>
+            <textarea id="app_deskripsi_aplikasi" placeholder="Jelaskan fungsi utama aplikasi untuk guru/sekolah..."></textarea>
+        </div>
+    </div>
+
+    <h2>👤 Profil developer (About Me)</h2>
+    <div class="info-box">
+        Data pribadi / kontak developer. Ditampilkan terpisah dari ringkasan aplikasi di atas.
     </div>
 
     <div class="form-grid">
@@ -216,13 +239,77 @@
 
         let currentUser = null;
         let isDeveloper = false;
+        let detachAppSettings = null;
+        let detachAboutInfo = null;
 
         auth.onAuthStateChanged(user => {
-            if (user) {
-                currentUser = user;
-                checkIfDeveloper(user.uid, user.email);
-                loadAboutInfo();
+            if (detachAppSettings) {
+                detachAppSettings();
+                detachAppSettings = null;
             }
+            if (detachAboutInfo) {
+                detachAboutInfo();
+                detachAboutInfo = null;
+            }
+            if (!user) {
+                currentUser = null;
+                return;
+            }
+            currentUser = user;
+
+            const appRef = db.ref('app_settings');
+            const onAppSettings = snap => {
+                const settings = resolveSettings(snap.val());
+                let devUid = settings.developer_uid || '';
+                const devEmail = settings.developer_email || '';
+                const email = user.email || '';
+
+                if (devUid === 'UID_DEVELOPER') {
+                    devUid = '';
+                }
+
+                if (!devUid && devEmail && email === devEmail) {
+                    devUid = user.uid;
+                    db.ref('app_settings').update({ developer_uid: devUid, developer_email: devEmail }).catch(() => {});
+                }
+
+                if (!devUid && email === 'alikhaidir052@gmail.com') {
+                    devUid = user.uid;
+                    db.ref('app_settings').update({ developer_uid: devUid, developer_email: email }).catch(() => {});
+                }
+
+                isDeveloper = !!devUid && user.uid === devUid;
+                updateUIPermission();
+
+                const r = settings.ringkasan_aplikasi || {};
+                document.getElementById('app_nama_aplikasi').value = r.nama_aplikasi || 'PenaAnalisis';
+                document.getElementById('app_versi').value = r.versi || '1.0.0';
+                document.getElementById('app_tagline').value = r.tagline || '';
+                document.getElementById('app_deskripsi_aplikasi').value = r.deskripsi_aplikasi || '';
+
+                if (detachAboutInfo) {
+                    detachAboutInfo();
+                    detachAboutInfo = null;
+                }
+                if (devUid) {
+                    const aboutRef = db.ref(`users_data/${devUid}/about_info`);
+                    const onAbout = aboutSnap => {
+                        const data = aboutSnap.val() || {};
+                        document.getElementById('nama_developer').value = data.nama_developer || '';
+                        document.getElementById('email_kontak').value = data.email_kontak || '';
+                        document.getElementById('telepon_kontak').value = data.telepon_kontak || '';
+                        document.getElementById('bidang_kerja').value = data.bidang_kerja || '';
+                        document.getElementById('tahun_pengalaman').value = data.tahun_pengalaman || '';
+                        document.getElementById('lokasi_kerja').value = data.lokasi_kerja || '';
+                        document.getElementById('biografi').value = data.biografi || '';
+                    };
+                    aboutRef.on('value', onAbout);
+                    detachAboutInfo = () => aboutRef.off('value', onAbout);
+                }
+            };
+
+            appRef.on('value', onAppSettings);
+            detachAppSettings = () => appRef.off('value', onAppSettings);
         });
 
         function resolveSettings(snapshotValue) {
@@ -231,34 +318,6 @@
                 return raw.Data;
             }
             return raw;
-        }
-
-        function checkIfDeveloper(uid, email) {
-            // Ambil developer uid dari database
-            db.ref('app_settings').once('value', snap => {
-                const settings = resolveSettings(snap.val());
-                let devUid = settings.developer_uid || '';
-                const devEmail = settings.developer_email || '';
-
-                if (devUid === 'UID_DEVELOPER') {
-                    devUid = '';
-                }
-
-                if (!devUid && devEmail && email === devEmail) {
-                    devUid = uid;
-                    db.ref('app_settings').update({ developer_uid: uid, developer_email: devEmail }).catch(() => {});
-                }
-
-                if (!devUid && email === "alikhaidir052@gmail.com") {
-                    devUid = uid;
-                    db.ref('app_settings').update({ developer_uid: uid, developer_email: email }).catch(() => {});
-                }
-
-                if (devUid) {
-                    isDeveloper = (uid === devUid);
-                }
-                updateUIPermission();
-            });
         }
 
         function updateUIPermission() {
@@ -282,37 +341,19 @@
             }
         }
 
-        function loadAboutInfo() {
-            // Load About Info dari developer, bukan dari currentUser
-            db.ref('app_settings').once('value', snap => {
-                const settings = resolveSettings(snap.val());
-                let devUid = settings.developer_uid || '';
-                if (devUid === 'UID_DEVELOPER') {
-                    devUid = '';
-                }
-                if (!devUid && settings.developer_email === currentUser.email) {
-                    devUid = currentUser.uid;
-                }
-                if (devUid) {
-                    db.ref(`users_data/${devUid}/about_info`).on('value', snap => {
-                        const data = snap.val() || {};
-                        document.getElementById('nama_developer').value = data.nama_developer || '';
-                        document.getElementById('email_kontak').value = data.email_kontak || '';
-                        document.getElementById('telepon_kontak').value = data.telepon_kontak || '';
-                        document.getElementById('bidang_kerja').value = data.bidang_kerja || '';
-                        document.getElementById('tahun_pengalaman').value = data.tahun_pengalaman || '';
-                        document.getElementById('lokasi_kerja').value = data.lokasi_kerja || '';
-                        document.getElementById('biografi').value = data.biografi || '';
-                    });
-                }
-            });
-        }
-
         function simpanAboutInfo() {
             if (!isDeveloper) {
                 Swal.fire('Akses Ditolak', 'Hanya developer yang bisa mengedit informasi ini', 'error');
                 return;
             }
+
+            const ringkasanData = {
+                nama_aplikasi: document.getElementById('app_nama_aplikasi').value.trim() || 'PenaAnalisis',
+                versi: document.getElementById('app_versi').value.trim() || '1.0.0',
+                tagline: document.getElementById('app_tagline').value.trim(),
+                deskripsi_aplikasi: document.getElementById('app_deskripsi_aplikasi').value.trim(),
+                updated_at: new Date().toISOString()
+            };
 
             const aboutData = {
                 nama_developer: document.getElementById('nama_developer').value.trim(),
@@ -326,7 +367,7 @@
             };
 
             if (!aboutData.nama_developer) {
-                Swal.fire('Perhatian', 'Nama lengkap/institusi harus diisi', 'warning');
+                Swal.fire('Perhatian', 'Nama lengkap/institusi (profil developer) harus diisi', 'warning');
                 return;
             }
 
@@ -350,8 +391,11 @@
                     db.ref('app_settings').update({ developer_uid: devUid, developer_email: devEmail || currentUser.email }).catch(() => {});
                 }
 
-                db.ref('users_data/' + devUid + '/about_info').set(aboutData).then(() => {
-                    Swal.fire('Berhasil', 'Informasi profil Anda telah disimpan', 'success');
+                Promise.all([
+                    db.ref('app_settings/ringkasan_aplikasi').set(ringkasanData),
+                    db.ref('users_data/' + devUid + '/about_info').set(aboutData)
+                ]).then(() => {
+                    Swal.fire('Berhasil', 'Ringkasan aplikasi dan profil developer telah disimpan.', 'success');
                     setTimeout(() => kembaliKeDashboard(), 1500);
                 }).catch(err => {
                     Swal.fire('Gagal', 'Terjadi kesalahan: ' + err.message, 'error');

@@ -270,7 +270,7 @@
             Belum memiliki akun? <b onclick="toggleAuthMode()">Daftar Disini</b>
         </p>
         <p style="font-size:12px; color:#555; margin-top:12px; line-height:1.4;">
-            Gunakan akun developer khusus untuk memantau aplikasi dan mengedit About Me. Akun biasa hanya dapat menggunakan fitur utama.
+            Akun developer dapat mengatur ringkasan aplikasi (untuk semua pengguna) dan profil About Me. Akun biasa memakai fitur utama serta dapat melihat info tersebut di beranda.
         </p>
     </div>
 </div>
@@ -490,12 +490,6 @@
                 const user = userCredential.user;
 
                 await user.updateProfile({ displayName: displayName });
-                await db.ref('users_data/' + user.uid + '/profil_sekolah').set({
-                    nama_guru: displayName,
-                    mapel: "Belum Diisi",
-                    tp: "2025/2026",
-                    kkm: 70
-                });
                 await ensureDeveloperAccount(user);
                 showToast("Akun berhasil dibuat! Selamat bergabung.", "success");
             }

@@ -171,10 +171,26 @@
         }
     });
 
+    let kkmRefUnsub = null;
+
     function startRealtimeSync() {
-        // 1. Ambil KKM
-        db.ref(`users_data/${uid}/profil_sekolah/kkm`).on('value', (snap) => {
-            document.getElementById('konv_kkm').value = snap.val() || 75;
+        // 1. KKM mengikuti Identitas Penilaian (tahun_pelajaran/.../identitas/kkm)
+        db.ref(`users_data/${uid}/pengaturan`).on('value', (pSnap) => {
+            const p = pSnap.val() || {};
+            const tpPath = p.tp_path || (p.tp_aktif ? String(p.tp_aktif).replace(/\//g, '_') : '');
+            if (kkmRefUnsub) {
+                kkmRefUnsub.off();
+                kkmRefUnsub = null;
+            }
+            if (!tpPath) {
+                document.getElementById('konv_kkm').value = 70;
+                return;
+            }
+            kkmRefUnsub = db.ref(`users_data/${uid}/tahun_pelajaran/${tpPath}/identitas/kkm`);
+            kkmRefUnsub.on('value', (snap) => {
+                const v = snap.val();
+                document.getElementById('konv_kkm').value = (v !== null && v !== undefined && v !== '') ? v : 70;
+            });
         });
 
         // 2. HITUNG SKOR MAKS BERDASARKAN ISIAN (BUKAN KOTAK)

@@ -499,12 +499,13 @@
         async function loadReportData() {
             try {
                 // Ambil data identitas dari tp aktif
-                const tpAktifRef = db.ref('users_data/' + currentUser.uid + '/pengaturan/tp_aktif');
-                const tpAktifSnap = await tpAktifRef.once('value');
-                const tpAktif = tpAktifSnap.val() || '';
+                const pengaturanRef = db.ref('users_data/' + currentUser.uid + '/pengaturan');
+                const pengaturanSnap = await pengaturanRef.once('value');
+                const peng = pengaturanSnap.val() || {};
+                const tpAktif = peng.tp_aktif || '';
+                const tpPath = peng.tp_path || (tpAktif ? String(tpAktif).replace(/\//g, '_') : '');
                 let identitas = {};
-                if (tpAktif) {
-                    const tpPath = tpAktif.replace(/\//g, '_');
+                if (tpPath) {
                     const identitasRef = db.ref(`users_data/${currentUser.uid}/tahun_pelajaran/${tpPath}/identitas`);
                     const identitasSnap = await identitasRef.once('value');
                     identitas = identitasSnap.val() || {};

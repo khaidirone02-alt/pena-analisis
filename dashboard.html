@@ -317,7 +317,7 @@
             <div class="nav-item" onclick="loadPage('analisis.html', this)">5. Analisis Butir Soal</div>
             <div class="nav-item" onclick="loadPage('hasil.html', this)">6. Hasil Analisis Akhir</div>
             <div class="nav-item highlight" onclick="loadPage('cetak.html', this)">7. Cetak Laporan</div>
-            <div id="about-menu-item" class="nav-item" onclick="loadPage('about-info.html', this)">ℹ️ Tentang Saya</div>
+            <div id="about-menu-item" class="nav-item" onclick="loadPage('about-info.html', this)">ℹ️ Info aplikasi &amp; developer</div>
             
             <div class="nav-item logout-item" onclick="handleLogout()">🚪 KELUAR APLIKASI</div>
         </div>
@@ -363,11 +363,9 @@
                 });
 
                 const aboutMenuItem = document.getElementById('about-menu-item');
-                db.ref('users_data/' + user.uid + '/role').once('value').then((snapshot) => {
-                    if (aboutMenuItem && snapshot.val() !== 'developer') {
-                        aboutMenuItem.style.display = 'none';
-                    }
-                });
+                if (aboutMenuItem) {
+                    aboutMenuItem.style.display = '';
+                }
             } else {
                 window.location.href = "index.html";
             }

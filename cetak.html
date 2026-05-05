@@ -707,33 +707,58 @@
 
             try {
                 const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({ unit: 'mm', format: 'legal', orientation: 'portrait' });
+                const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
                 const pageWidth = pdf.internal.pageSize.getWidth();
                 const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 15; // 1.5cm
+                const contentWidth = pageWidth - margin * 2;
+                const contentHeight = pageHeight - margin * 2;
 
-                const element = document.querySelector('.container');
+                // Capture hanya area laporan (tanpa tombol & padding container)
+                const element = document.querySelector('.print-area');
                 const canvas = await html2canvas(element, {
-                    scale: 3,
+                    scale: 2,
                     useCORS: true,
                     backgroundColor: '#ffffff',
-                    logging: false
+                    logging: false,
+                    windowWidth: element.scrollWidth,
+                    windowHeight: element.scrollHeight
                 });
 
-                const imgData = canvas.toDataURL('image/png');
-                const imgProps = pdf.getImageProperties(imgData);
-                const pdfWidth = pageWidth;
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                let heightLeft = pdfHeight;
-                let position = 0;
+                // Slicing canvas per halaman agar:
+                // - margin 1.5cm benar-benar ada
+                // - ukuran file lebih kecil (JPEG + quality)
+                const pxPerMm = canvas.width / contentWidth;
+                const pageHeightPx = Math.floor(contentHeight * pxPerMm);
+                let renderedHeight = 0;
 
-                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-                heightLeft -= pageHeight;
+                const pageCanvas = document.createElement('canvas');
+                pageCanvas.width = canvas.width;
+                pageCanvas.height = pageHeightPx;
+                const pageCtx = pageCanvas.getContext('2d');
 
-                while (heightLeft > 0) {
-                    position -= pageHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-                    heightLeft -= pageHeight;
+                while (renderedHeight < canvas.height) {
+                    const sliceHeight = Math.min(pageHeightPx, canvas.height - renderedHeight);
+                    pageCanvas.height = sliceHeight;
+                    pageCtx.clearRect(0, 0, pageCanvas.width, sliceHeight);
+                    pageCtx.drawImage(
+                        canvas,
+                        0,
+                        renderedHeight,
+                        canvas.width,
+                        sliceHeight,
+                        0,
+                        0,
+                        canvas.width,
+                        sliceHeight
+                    );
+
+                    const imgData = pageCanvas.toDataURL('image/jpeg', 0.75);
+                    const sliceHeightMm = sliceHeight / pxPerMm;
+
+                    if (renderedHeight > 0) pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', margin, margin, contentWidth, sliceHeightMm, undefined, 'FAST');
+                    renderedHeight += sliceHeight;
                 }
 
                 pdf.save('laporan-analisis-penilaian.pdf');

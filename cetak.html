@@ -39,6 +39,13 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.08);
         }
 
+        /* Area yang harus sama antara preview dan hasil cetak */
+        .print-area {
+            width: 100%;
+            max-width: 180mm; /* A4 (210mm) - margin 1.5cm kiri/kanan */
+            margin: 0 auto;
+        }
+
         .bottom-spacer {
             height: calc(220px + env(safe-area-inset-bottom, 20px));
             width: 100%;
@@ -133,7 +140,7 @@
             border-collapse: collapse;
             margin-top: clamp(15px, 3vw, 20px);
             font-size: clamp(11px, 2vw, 13px);
-            overflow-x: auto;
+            table-layout: fixed;
         }
 
         th, td {
@@ -141,6 +148,9 @@
             padding: clamp(6px, 1.5vw, 8px);
             text-align: left;
             font-size: clamp(11px, 2vw, 12px);
+            vertical-align: top;
+            word-break: break-word;
+            white-space: normal;
         }
 
         th {
@@ -272,17 +282,25 @@
             color: #7f8c8d;
         }
 
-        @page { size: legal portrait; margin: 12mm; }
+        @page { size: A4 portrait; margin: 15mm; } /* 1.5cm */
         @media print {
+            * {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
             body {
                 background: white;
                 padding: 0;
             }
             .container {
                 box-shadow: none;
-                padding: 16px;
-                max-width: 100%;
+                padding: 0;
+                max-width: none;
                 width: auto;
+                margin: 0 auto;
+            }
+            .print-area {
+                max-width: 180mm;
                 margin: 0 auto;
             }
             .btn-container {
@@ -298,10 +316,12 @@
             }
             table {
                 width: 100%;
-                table-layout: auto;
-                font-size: 11px;
+                table-layout: fixed;
+                font-size: 10px;
+                page-break-inside: auto;
             }
             tr {
+                break-inside: avoid;
                 page-break-inside: avoid;
                 page-break-after: auto;
             }
@@ -312,9 +332,11 @@
                 display: table-footer-group;
             }
             .section {
+                break-inside: avoid;
                 page-break-inside: avoid;
             }
             .footer-signature {
+                break-inside: avoid;
                 page-break-inside: avoid;
             }
         }
@@ -323,20 +345,21 @@
 <body>
 
     <div class="container">
-        <div class="header">
-            <img id="logo-kop" src="logo.svg" alt="Logo Sekolah">
-            <div class="header-text">
-                <h1>LAPORAN ANALISIS PENILAIAN</h1>
-                <p class="kop-middle" id="nama-sekolah">-</p>
-                <p class="kop-bottom" id="tp-header">-</p>
+        <div class="print-area">
+            <div class="header">
+                <img id="logo-kop" src="logo.svg" alt="Logo Sekolah">
+                <div class="header-text">
+                    <h1>LAPORAN ANALISIS PENILAIAN</h1>
+                    <p class="kop-middle" id="nama-sekolah">-</p>
+                    <p class="kop-bottom" id="tp-header">-</p>
+                </div>
             </div>
-        </div>
 
-        <div id="loading" class="loading">
-            <p>Memuat data laporan...</p>
-        </div>
+            <div id="loading" class="loading">
+                <p>Memuat data laporan...</p>
+            </div>
 
-        <div id="report-content" style="display: none;">
+            <div id="report-content" style="display: none;">
             <!-- Identitas Penilaian -->
             <div class="section">
                 <h2>1. IDENTITAS PENILAIAN</h2>

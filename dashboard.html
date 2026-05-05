@@ -344,7 +344,7 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="logo-circle" onclick="document.getElementById('logo-input').click()">
-                <img id="display-logo" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><circle cx='64' cy='64' r='64' fill='%23ffffff'/><circle cx='64' cy='42' r='26' fill='%23bdc3c7'/><path d='M20 110c0-27 22-50 50-50s50 23 50 50H20z' fill='%23bdc3c7'/></svg>" alt="Logo">
+                <img id="display-logo" src="profile.jpeg" alt="Logo">
             </div>
             <div class="logo-hint">Klik untuk unggah logo</div>
 
@@ -391,7 +391,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const auth = firebase.auth();
-        const placeholderLogo = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><circle cx='64' cy='64' r='64' fill='%23ffffff'/><circle cx='64' cy='42' r='26' fill='%23bdc3c7'/><path d='M20 110c0-27 22-50 50-50s50 23 50 50H20z' fill='%23bdc3c7'/></svg>";
+        const placeholderLogo = "profile.jpeg";
 
         auth.onAuthStateChanged((user) => {
             if (user) {

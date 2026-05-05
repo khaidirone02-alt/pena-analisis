@@ -221,6 +221,7 @@
             border-radius: 8px;
             background: #f8f9fa;
             min-width: 220px;
+            text-align: center;
         }
 
         .signature-title {
@@ -228,6 +229,20 @@
             color: #2c3e50;
             margin-bottom: 10px;
             font-size: 13px;
+        }
+
+        .signature-space {
+            height: 78px; /* ruang tanda tangan */
+            margin: 10px 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .signature-space::after{
+            content: "";
+            width: 85%;
+            border-bottom: 1px dashed #cbd3da;
         }
 
         .signature-name {
@@ -241,13 +256,6 @@
             font-size: 14px;
             color: #5d6d7e;
             margin-bottom: 14px;
-        }
-
-        .signature-role {
-            margin-top: 20px;
-            font-size: 13px;
-            color: #7f8c8d;
-            text-align: center;
         }
 
         .barcode-card {
@@ -463,9 +471,9 @@
             <div class="footer-signature">
                 <div class="signature-card">
                     <div class="signature-title">Kepala Sekolah</div>
+                    <div class="signature-space" aria-hidden="true"></div>
                     <div class="signature-name" id="kepala-sekolah">-</div>
                     <div class="signature-id" id="kepala-nip">-</div>
-                    <div class="signature-role">Tanda Tangan</div>
                 </div>
                 <div class="barcode-card">
                     <svg id="barcode"></svg>
@@ -473,9 +481,9 @@
                 </div>
                 <div class="signature-card">
                     <div class="signature-title">Guru Penilai</div>
+                    <div class="signature-space" aria-hidden="true"></div>
                     <div class="signature-name" id="nama-guru-footer">-</div>
                     <div class="signature-id" id="id-guru-footer">-</div>
-                    <div class="signature-role">Tanda Tangan</div>
                 </div>
             </div>
         </div>

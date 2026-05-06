@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Pena Analisisku</string>
+    <string name="title_activity_main">Pena Analisisku</string>
+    <string name="package_name">com.penaanalisisku.app</string>
+    <string name="custom_url_scheme">com.penaanalisisku.app</string>
+</resources>

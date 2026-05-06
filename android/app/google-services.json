@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1088329722308",
+    "firebase_url": "https://analisis-app-d8d93-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "analisis-app-d8d93",
+    "storage_bucket": "analisis-app-d8d93.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1088329722308:android:e034c70c5b43d05dff1c91",
+        "android_client_info": {
+          "package_name": "com.penaanalisisku.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1088329722308-82cahdb9cl4me8rvhj27k8vpt6r6n085.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC8oBIN2gZnAehLcWwO0bxxGWj116pPiZc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1088329722308-82cahdb9cl4me8rvhj27k8vpt6r6n085.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

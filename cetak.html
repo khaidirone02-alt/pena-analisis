@@ -511,7 +511,7 @@
         <div class="btn-container">
             <button class="btn" onclick="generatePDF()">Cetak PDF</button>
             <button class="btn" onclick="printAndReturn()">Cetak Langsung</button>
-            <button class="btn" onclick="window.location.href='dashboard.html'">Kembali ke Dashboard</button>
+            <button class="btn" onclick="navigateToDashboard()">Kembali ke Dashboard</button>
         </div>
     </div>
     <div class="bottom-spacer"></div>
@@ -537,13 +537,44 @@
 
         let currentUser = null;
 
+        /** Keluar dari iframe dashboard agar tidak memuat dashboard.html bersarang (double menu). */
+        function navigateToDashboard() {
+            try {
+                if (window.parent !== window && typeof window.parent.loadPage === 'function') {
+                    window.parent.loadPage('dashboard-home.html', null);
+                    return;
+                }
+            } catch (e) { /* cross-origin */ }
+            window.location.href = 'dashboard.html';
+        }
+
+        function navigateToPesertaDidik() {
+            try {
+                if (window.parent !== window && typeof window.parent.loadPage === 'function') {
+                    window.parent.loadPage('peserta-didik.html', null);
+                    return;
+                }
+            } catch (e) { /* cross-origin */ }
+            window.location.href = 'peserta-didik.html';
+        }
+
+        function navigateToLogin() {
+            try {
+                if (window.top !== window) {
+                    window.top.location.href = 'index.html';
+                    return;
+                }
+            } catch (e) { /* cross-origin */ }
+            window.location.href = 'index.html';
+        }
+
         // Cek autentikasi
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUser = user;
                 loadReportData();
             } else {
-                window.location.href = 'index.html';
+                navigateToLogin();
             }
         });
 
@@ -644,7 +675,7 @@
 
                 if (!kelasAktif) {
                     alert('Kelas aktif belum dipilih. Silakan pilih kelas di menu Peserta Didik terlebih dahulu.');
-                    window.location.href = 'peserta-didik.html';
+                    navigateToPesertaDidik();
                     return;
                 }
 
@@ -804,7 +835,7 @@
             btnContainer.style.display = 'none';
 
             window.onafterprint = function() {
-                window.location.href = 'dashboard.html';
+                navigateToDashboard();
             };
 
             window.print();

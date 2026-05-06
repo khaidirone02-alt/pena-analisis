@@ -1,21 +1,23 @@
-const CACHE_NAME = 'pena-analisis-cache-v5';
+/** Prefix folder deploy (mis. GitHub Pages /nama-repo/) agar cache & fallback offline benar */
+const BASE = self.location.pathname.replace(/[^/]*$/, '');
+const CACHE_NAME = 'pena-analisis-cache-v6';
+
 const FILES_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/dashboard.html',
-  '/dashboard-home.html',
-  '/Identitas Penilaian.html',
-  '/peserta-didik.html',
-  '/input-jawaban.html',
-  '/konversi.html',
-  '/analisis.html',
-  '/hasil.html',
-  '/cetak.html',
-  '/about-info.html',
-  '/icon.png?v=3',
-  '/splash.png?v=2',
-  '/profile.jpeg',
-  '/manifest.json'
+  BASE + 'index.html',
+  BASE + 'dashboard.html',
+  BASE + 'dashboard-home.html',
+  BASE + 'Identitas Penilaian.html',
+  BASE + 'peserta-didik.html',
+  BASE + 'input-jawaban.html',
+  BASE + 'konversi.html',
+  BASE + 'analisis.html',
+  BASE + 'hasil.html',
+  BASE + 'cetak.html',
+  BASE + 'about-info.html',
+  BASE + 'icon.png?v=3',
+  BASE + 'splash.png?v=2',
+  BASE + 'profile.jpeg',
+  BASE + 'manifest.json'
 ];
 
 self.addEventListener('install', event => {
@@ -55,7 +57,7 @@ self.addEventListener('fetch', event => {
         return networkResponse;
       }).catch(() => {
         if (event.request.destination === 'document') {
-          return caches.match('/index.html');
+          return caches.match(BASE + 'index.html');
         }
       });
     })

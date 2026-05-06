@@ -608,9 +608,14 @@
         }
     });
 
-    if ('serviceWorker' in navigator) {
+    // Di WebView Capacitor, SW sering men-cache versi lama dan mengganggu auth/API; hanya aktifkan di browser (PWA web).
+    const isCapacitorNative = typeof window.Capacitor !== 'undefined'
+        && typeof window.Capacitor.isNativePlatform === 'function'
+        && window.Capacitor.isNativePlatform();
+
+    if ('serviceWorker' in navigator && !isCapacitorNative) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
+            navigator.serviceWorker.register(new URL('sw.js', window.location.href).href, { scope: new URL('./', window.location.href).href })
                 .then(reg => console.log('Service Worker terdaftar:', reg.scope))
                 .catch(err => console.warn('Service Worker gagal:', err));
         });
